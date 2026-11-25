@@ -15,17 +15,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  # 打包和部署分成两个任务：部署任务开始时，发布包已经登记完，不会查不到
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - name: 配置 Pages
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
       - name: 整理要发布的文件
         run: |
           mkdir _site
@@ -34,6 +30,14 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: 部署
         id: deployment
         uses: actions/deploy-pages@v4
