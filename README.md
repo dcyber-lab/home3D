@@ -4,6 +4,8 @@ Blk 10 · Type B4a 两房的可交互 3D 模型。尺寸按《全屋 3D 建模�
 
 在线地址：<https://dcyber-lab.github.io/home3D/>
 
+![斜看沙发墙：做法 A，晚上全开](docs/preview.jpg)
+
 ## 能做什么
 
 - **六种客厅吊顶做法**（A / B / C / D / E1 / E2）一键切换，同一个场景里曝光一致，可以直接对比。
