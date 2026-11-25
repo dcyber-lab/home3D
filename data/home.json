@@ -1,0 +1,293 @@
+{
+  "meta": {
+    "title": "Lake Grande #13-42",
+    "subtitle": "Blk 10 · Type B4a 两房",
+    "version": "2026-11-25",
+    "units": "m",
+    "axes": "x 向右（沙发墙→电视墙/卧室），y 向下（阳台→入户门），z 向上。原点 = 客厅沙发墙内表面 × 阳台推拉门线，地面。",
+    "sources": "实测 = 业主量过；酷家乐 = 设计师模型量取 ±5 cm；假设 = 没量过按常规取值",
+    "_note": "这个文件是全屋模型的唯一数据来源。改完保存、刷新页面就生效。坐标都是内表面，单位米。"
+  },
+
+  "heights": {
+    "ceiling": 2.60,
+    "ceilingSource": "假设",
+    "slabThickness": 0.12,
+    "door": 2.10,
+    "newBand": 2.45,
+    "oldBox": 2.30
+  },
+
+  "rooms": [
+    { "id": "living",   "name": "客厅",   "x": [0, 2.755],    "y": [0, 4.50],      "size": "2.755 × 4.50", "note": "宽 2.755 实测；4.50 是设计用的客厅段长度，待现场确认" },
+    { "id": "dining",   "name": "餐厅",   "x": [0, 2.74],     "y": [4.50, 7.16],   "size": "2.74 × 2.66",  "note": "DB 墙长 2.085 实测" },
+    { "id": "balcony",  "name": "阳台",   "x": [0, 2.755],    "y": [-1.50, 0],     "size": "4.38 m²",      "note": "外沿是斜的，近似" },
+    { "id": "foyer",    "name": "入户走廊", "x": [0, 1.65],    "y": [7.16, 10.45],  "size": "1.65 × 3.29",  "note": "手写 2393 高待确认" },
+    { "id": "kitchen",  "name": "厨房",   "x": [3.07, 6.53],  "y": [5.35, 7.16],   "size": "6.09 m²",      "note": "下墙 1.937 实测" },
+    { "id": "bedroom2", "name": "次卧",   "x": [3.08, 5.67],  "y": [-1.54, 1.58],  "size": "2.59 × 3.12",  "note": "深 3.12 实测（酷家乐 3.38）" },
+    { "id": "master",   "name": "主卧",   "x": [6.12, 8.79],  "y": [-1.54, 2.26],  "size": "2.67 × 3.80",  "note": "宽 2.67、床头墙 3.80 实测（酷家乐宽 2.81）" },
+    { "id": "corridor", "name": "走廊",   "x": [2.755, 5.10], "y": [1.71, 3.02],   "size": "",             "note": "电视墙段 1.71 实测" },
+    { "id": "db",       "name": "DB/ST",  "x": [3.09, 3.98],  "y": [3.12, 3.65],   "size": "0.46 m²",      "note": "" },
+    { "id": "bath2",    "name": "客卫",   "x": [3.09, 5.67],  "y": [3.73, 5.22],   "size": "4.22 m²",      "note": "" },
+    { "id": "mbath",    "name": "主卫",   "x": [5.98, 8.79],  "y": [3.12, 5.22],   "size": "5.11 m²",      "note": "黑框长虹玻璃门" }
+  ],
+
+  "floors": [
+    { "id": "f_living",   "mat": "floor_wood",    "rect": [0, 0, 2.755, 4.50] },
+    { "id": "f_dining",   "mat": "floor_wood",    "rect": [0, 4.50, 2.74, 7.16] },
+    { "id": "f_corridor", "mat": "floor_wood",    "rect": [2.755, 1.71, 5.10, 3.02] },
+    { "id": "f_bed2",     "mat": "floor_wood",    "rect": [3.08, -1.54, 5.67, 1.58] },
+    { "id": "f_master",   "mat": "floor_wood",    "poly": [[6.12, -1.54], [8.79, -1.54], [8.79, 3.02], [5.20, 3.02], [5.20, 1.71], [6.12, 1.71]] },
+    { "id": "f_foyer",    "mat": "floor_marble",  "rect": [0, 7.16, 1.65, 10.45] },
+    { "id": "f_kitchen",  "mat": "floor_tile",    "rect": [3.07, 5.35, 6.53, 7.16] },
+    { "id": "f_db",       "mat": "floor_tile",    "rect": [3.09, 3.12, 3.98, 3.65] },
+    { "id": "f_bath2",    "mat": "floor_tile_dark", "poly": [[4.06, 3.12], [5.67, 3.12], [5.67, 5.22], [3.09, 5.22], [3.09, 3.73], [4.06, 3.73]] },
+    { "id": "f_mbath",    "mat": "floor_tile_dark", "rect": [5.98, 3.12, 8.79, 5.22] },
+    { "id": "f_balcony",  "mat": "floor_balcony", "poly": [[0, 0], [0, -1.26], [0.50, -1.44], [0.72, -1.86], [2.62, -1.50], [2.755, -1.50], [2.755, 0]] }
+  ],
+
+  "base": {
+    "_note": "地面下面的结构板轮廓，门槛处露出来的就是它",
+    "polys": [
+      [[-0.20, -1.74], [8.99, -1.74], [8.99, 5.35], [6.73, 5.35], [6.73, 7.36], [1.85, 7.36], [1.85, 10.65], [-0.20, 10.65]],
+      [[-0.06, -0.12], [-0.06, -1.32], [0.50, -1.52], [0.72, -1.94], [2.62, -1.58], [2.76, -1.58], [2.76, -0.12]]
+    ]
+  },
+
+  "walls": [
+    { "id": "w_sofa", "name": "沙发墙", "x": [-0.20, 0], "y": [-1.26, 10.65], "out": "-x",
+      "openings": [ { "at": [-1.10, -0.255], "z": [0.90, 2.30], "fill": "window", "note": "阳台侧窗 宽 0.845 实测" } ] },
+    { "id": "w_balcony_door", "name": "阳台门墙", "x": [0, 2.755], "y": [-0.12, 0], "out": "-y",
+      "openings": [ { "at": [0.25, 2.65], "z": [0, 2.40], "fill": "slider", "note": "门高假设" } ] },
+    { "id": "w_tv", "name": "电视墙", "x": [2.755, 3.08], "y": [-1.74, 1.71], "note": "客厅一侧 y 0–1.71 实测" },
+    { "id": "w_bed2_window", "name": "次卧窗墙", "x": [3.08, 5.67], "y": [-1.74, -1.54], "out": "-y",
+      "openings": [ { "at": [3.38, 5.37], "z": [0.95, 2.35], "fill": "window", "note": "窗洞尺寸假设" } ] },
+    { "id": "w_bed2_master", "name": "次卧/主卧隔墙", "x": [5.67, 6.12], "y": [-1.74, 1.58] },
+    { "id": "w_master_window", "name": "主卧窗墙", "x": [6.12, 8.79], "y": [-1.74, -1.54], "out": "-y",
+      "openings": [ { "at": [6.42, 8.49], "z": [0.95, 2.35], "fill": "window", "note": "窗洞尺寸假设" } ] },
+    { "id": "w_east", "name": "床头墙（外墙）", "x": [8.79, 8.99], "y": [-1.74, 5.35], "out": "+x",
+      "openings": [ { "at": [3.55, 4.55], "z": [1.20, 2.20], "fill": "window", "frosted": true } ] },
+    { "id": "w_bed2_corridor", "name": "次卧/走廊隔墙", "x": [3.08, 6.12], "y": [1.58, 1.71],
+      "openings": [ { "at": [3.15, 4.00], "z": [0, 2.10], "fill": "door", "style": "walnut", "hinge": "start", "swing": "-" } ] },
+    { "id": "w_master_door", "name": "主卧门墙", "x": [5.10, 5.20], "y": [1.71, 3.02],
+      "openings": [ { "at": [2.07, 2.97], "z": [0, 2.10], "fill": "door", "style": "walnut", "hinge": "end", "swing": "+" } ] },
+    { "id": "w_corridor_bath", "name": "走廊/卫生间隔墙", "x": [3.09, 8.79], "y": [3.02, 3.12],
+      "openings": [
+        { "at": [3.20, 3.90], "z": [0, 2.10], "fill": "door", "style": "white", "hinge": "start", "swing": "-" },
+        { "at": [4.14, 4.94], "z": [0, 2.10], "fill": "door", "style": "walnut", "hinge": "start", "swing": "+" },
+        { "at": [6.05, 6.85], "z": [0, 2.10], "fill": "door", "style": "glass_black", "hinge": "start", "swing": "+" }
+      ] },
+    { "id": "w_db_dining", "name": "DB 墙", "x": [2.74, 3.09], "y": [3.02, 5.35], "note": "长 2.085 实测" },
+    { "id": "w_db_east", "x": [3.98, 4.06], "y": [3.12, 3.73] },
+    { "id": "w_db_south", "x": [3.09, 3.98], "y": [3.65, 3.73] },
+    { "id": "w_bath_between", "x": [5.67, 5.98], "y": [3.12, 5.22] },
+    { "id": "w_bath_south_a", "x": [3.09, 6.53], "y": [5.22, 5.35] },
+    { "id": "w_bath_south_b", "x": [6.53, 8.79], "y": [5.22, 5.35], "out": "+y" },
+    { "id": "w_kitchen_dining", "name": "厨房门墙", "x": [2.74, 3.07], "y": [5.35, 7.16],
+      "openings": [ { "at": [5.45, 6.30], "z": [0, 2.10], "fill": "door", "style": "walnut", "hinge": "start", "swing": "+" } ] },
+    { "id": "w_kitchen_east", "x": [6.53, 6.73], "y": [5.35, 7.36], "out": "+x" },
+    { "id": "w_kitchen_south", "name": "厨房下墙", "x": [1.85, 6.53], "y": [7.16, 7.36], "out": "+y", "note": "1.937 实测段" },
+    { "id": "w_foyer_east", "name": "入户走廊右墙", "x": [1.65, 1.85], "y": [7.16, 10.65], "out": "+x" },
+    { "id": "w_washer_stub", "x": [1.65, 1.71], "y": [6.50, 7.16] },
+    { "id": "w_foyer_south", "name": "入户门墙", "x": [-0.20, 1.65], "y": [10.45, 10.65], "out": "+y",
+      "openings": [ { "at": [0.10, 0.90], "z": [0, 2.10], "fill": "door", "style": "entry", "hinge": "start", "swing": "-" } ] }
+  ],
+
+  "balcony": {
+    "rail": [[0, -1.26], [0.50, -1.44], [0.72, -1.86], [2.62, -1.50], [2.755, -1.50]],
+    "parapet": 0.20,
+    "railHeight": 1.10,
+    "_note": "外沿斜边 0.541 + 1.884，只影响阳台本身，近似即可"
+  },
+
+  "curtains": [
+    { "id": "cur_living",  "name": "客厅白纱", "style": "sheer",    "from": [0.04, 0.11],   "to": [2.72, 0.11],   "top": "livingBand" },
+    { "id": "cur_master",  "name": "主卧白纱", "style": "sheer",    "from": [6.16, -1.44],  "to": [8.75, -1.44],  "top": 2.45 },
+    { "id": "cur_master_l", "name": "主卧遮光帘", "style": "blackout", "from": [6.16, -1.37],  "to": [6.62, -1.37],  "top": 2.45 },
+    { "id": "cur_master_r", "name": "主卧遮光帘", "style": "blackout", "from": [8.29, -1.37],  "to": [8.75, -1.37],  "top": 2.45 },
+    { "id": "cur_bed2",    "name": "次卧白纱", "style": "sheer",    "from": [3.12, -1.50],  "to": [5.63, -1.50],  "top": 2.60 }
+  ],
+
+  "ceiling": {
+    "slabs": [
+      [-0.20, -1.74, 8.99, 5.35],
+      [-0.20, 5.35, 6.73, 7.36],
+      [-0.20, 7.36, 1.85, 10.65],
+      [-0.20, -2.00, 2.755, -1.74]
+    ],
+    "oldBox": { "x": [0, 0.10], "z": [2.30, 2.60], "y": [0, 10.45], "source": "实测",
+                "note": "贴着沙发墙通长。里面可能是梁，也可能是空盒子（待确认）。y > 4.5 的部分六种做法都保留。" },
+    "diningTransverse": { "x": [0.10, 2.74], "y": [4.50, 4.90], "z": [2.30, 2.60], "source": "照片",
+                          "note": "餐厅端横向边吊，尺寸没量，按 0.30 高、0.40 宽" },
+    "foyer": { "rect": [0.10, 7.16, 1.65, 10.45], "z": 2.393, "source": "手写",
+               "downlights": [[0.90, 7.75], [0.90, 8.55], [0.90, 9.35], [0.90, 10.05]],
+               "note": "平面图手写「2393 高」，可能是走廊吊顶高度，待确认" },
+
+    "living": {
+      "x": [0, 2.755],
+      "y": [0, 4.50],
+      "default": "A",
+      "common": {
+        "endBand": 0.30,
+        "trough": 0.10,
+        "troughFloor": 0.02,
+        "lipHeight": 0.05,
+        "lipThickness": 0.012,
+        "ledFromLip": 0.07,
+        "cornerRadius": 0.30,
+        "spots": { "fromWall": 0.15, "y": [0.45, 1.35, 2.25, 3.15, 4.05], "beam": 24 },
+        "hatch": { "id": "D1", "size": [0.20, 0.30], "y": 2.70 }
+      },
+      "options": {
+        "A": {
+          "name": "拆旧，只做一层 150",
+          "shape": "一层：x 0–0.35，z 2.45–2.60",
+          "kind": "u", "sofaWidth": 0.35, "under": 2.45, "keepOldBox": false, "spotZ": 2.45, "tip": 1.74,
+          "caveat": "旧边吊里面是空盒子才能做"
+        },
+        "B": {
+          "name": "旧的保留 + 外面加一层 150",
+          "shape": "旧边吊 x 0–0.10、z 2.30–2.60；新边吊 x 0.10–0.35、z 2.45–2.60",
+          "kind": "u", "sofaWidth": 0.35, "under": 2.45, "keepOldBox": true, "spotZ": 2.45, "tip": 1.74,
+          "caveat": "旧边吊会挡掉一点光斑外圈"
+        },
+        "C": {
+          "name": "旧的保留 + 13 cm 挡板洗墙",
+          "shape": "旧边吊 x 0–0.10、z 2.30–2.60；外侧挡板 x 0.10–0.118、z 2.17–2.60",
+          "kind": "wash", "under": 2.45, "keepOldBox": true, "spotZ": null, "tip": null,
+          "baffle": { "x": [0.10, 0.118], "z": [2.17, 2.60] },
+          "wash": { "x": 0.065, "z": 2.29, "tiltDeg": 18 },
+          "caveat": "没有射灯；沙发墙这侧没有朝上的灯槽"
+        },
+        "D": {
+          "name": "整条做到 300 厚",
+          "shape": "一层：x 0–0.35，z 2.30–2.60（整个 U 形都是 300）",
+          "kind": "u", "sofaWidth": 0.35, "under": 2.30, "keepOldBox": false, "spotZ": 2.30, "tip": 1.59,
+          "caveat": "旧边吊里面是空盒子才能做"
+        },
+        "E1": {
+          "name": "旧的整条加宽到 22 cm",
+          "shape": "x 0–0.22、z 2.30–2.60 整块；侧面 z 2.435–2.475 有一条凸出 0.035 的上照铝槽",
+          "kind": "e1", "sofaWidth": 0.22, "under": 2.45, "keepOldBox": true, "spotZ": 2.30, "tip": 1.59,
+          "block": { "x": [0, 0.22], "z": [2.30, 2.60] },
+          "channel": { "out": 0.035, "z": [2.435, 2.475], "ledZ": 2.453 },
+          "caveat": "灯带离天花 0.15"
+        },
+        "E2": {
+          "name": "只加宽下半截",
+          "shape": "下半截 x 0–0.22、z 2.30–2.45；上半截旧的 x 0–0.12、z 2.45–2.60；台阶上 x 0.12–0.22 是灯槽",
+          "kind": "u", "sofaWidth": 0.22, "under": 2.45, "keepOldBox": true, "spotZ": 2.30, "tip": 1.59,
+          "lower": { "x": [0, 0.22], "z": [2.30, 2.45] },
+          "caveat": "22 cm 下半截是直的，一直到阳台墙"
+        }
+      }
+    },
+
+    "master": {
+      "_note": "本地坐标：u = 离床头墙的距离，v = 离窗墙的距离",
+      "headWallX": 8.79,
+      "windowWallY": -1.54,
+      "size": { "u": 2.67, "v": 3.80 },
+      "headBand": 0.35,
+      "windowBand": 0.30,
+      "under": 2.45,
+      "cornerRadius": 0.30,
+      "spots": [ { "id": "M1", "u": 0.15, "v": 1.20 }, { "id": "M2", "u": 0.15, "v": 3.20 } ],
+      "beam": 24,
+      "beamChoices": [24, 36],
+      "hatch": { "id": "D2", "u": 0.10, "v": 2.20, "size": [0.20, 0.30] }
+    }
+  },
+
+  "lights": {
+    "spot": { "lumens": 520, "colour": "#ffd9a8", "trimOuter": 0.09, "cutout": 0.075, "housing": 0.09 },
+    "strip": { "lumensPerMetre": 620, "colour": "#ffd2a0", "width": 0.012 },
+    "wash": { "lumensPerMetre": 620 },
+    "entryCabinet": { "length": 3.0 },
+    "defaultScene": "night_all"
+  },
+
+  "scenes": {
+    "night_all":   { "name": "晚上全开",   "spots": true,  "cove": true,  "wash": true,  "day": false },
+    "night_spots": { "name": "只开射灯",   "spots": true,  "cove": false, "wash": true,  "day": false, "hint": "C 没有射灯，这里开的是洗墙灯带" },
+    "night_cove":  { "name": "只开灯带",   "spots": false, "cove": true,  "wash": false, "day": false },
+    "day":         { "name": "白天",       "spots": false, "cove": false, "wash": false, "day": true,  "hint": "阳台白纱透光，用来判断边吊显不显重" }
+  },
+
+  "cameras": [
+    { "id": "overview", "name": "鸟瞰全屋", "mode": "orbit", "pos": [9.9, 12.9, 15.6], "target": [4.25, 3.75, 0.6], "fov": 34 },
+    { "id": "plan",     "name": "平面",     "mode": "orbit", "pos": [4.40, 4.47, 30],   "target": [4.40, 4.45, 0], "fov": 26 },
+    { "id": "diag",     "name": "斜看沙发墙", "mode": "walk", "pos": [2.35, 5.60, 1.45], "target": [0.25, 1.20, 1.95], "hfov": 78, "look": "从餐厅端看沙发墙和阳台" },
+    { "id": "front",    "name": "正对沙发墙", "mode": "walk", "pos": [2.55, 2.25, 1.35], "target": [0.00, 2.25, 1.75], "hfov": 78, "look": "光斑形状、间距和高度" },
+    { "id": "close",    "name": "近看边吊",  "mode": "walk", "pos": [1.35, 4.90, 1.80], "target": [0.20, 1.60, 2.30], "hfov": 78, "look": "边吊台阶、灯槽挡边" },
+    { "id": "corner",   "name": "阳台转角",  "mode": "walk", "pos": [1.70, 2.40, 1.55], "target": [0.30, 0.25, 2.30], "hfov": 78, "look": "R0.30 圆弧转角" },
+    { "id": "back",     "name": "回看餐厅端", "mode": "walk", "pos": [2.20, 0.60, 1.50], "target": [0.30, 4.60, 2.10], "hfov": 78, "look": "餐厅端灯槽和旧边吊" },
+    { "id": "master",   "name": "主卧床头墙", "mode": "walk", "pos": [6.39, 1.06, 1.50], "target": [8.79, 0.66, 1.60], "hfov": 78, "look": "M1、M2 光斑和 L 形灯槽" },
+    { "id": "entry",    "name": "入户往里看", "mode": "walk", "pos": [0.95, 9.90, 1.50], "target": [1.10, 4.00, 1.35], "hfov": 78, "look": "进门第一眼" },
+    { "id": "bed2",     "name": "次卧",      "mode": "walk", "pos": [3.45, 1.25, 1.50], "target": [5.00, -1.20, 0.90], "hfov": 78 }
+  ],
+
+  "furniture": [
+    { "id": "sofa",        "type": "sofa",        "name": "三人沙发",   "room": "living", "x": [0.00, 0.95], "y": [0.10, 2.50], "h": 0.86, "face": "+x", "finish": "leather_black", "opts": { "seatH": 0.44 }, "note": "黑色皮，靠沙发墙" },
+    { "id": "rug",         "type": "rug",         "name": "地毯",       "room": "living", "x": [0.95, 2.25], "y": [0.10, 2.60], "h": 0.012, "face": "+x", "finish": "rug_dots", "note": "黑白点状图案" },
+    { "id": "tv_cabinet",  "type": "tv_cabinet",  "name": "电视柜",     "room": "living", "x": [2.45, 2.755], "y": [0.20, 1.70], "h": 0.45, "face": "-x", "finish": "walnut", "note": "胡桃木低柜" },
+    { "id": "tv",          "type": "tv",          "name": "电视",       "room": "living", "x": [2.715, 2.755], "y": [0.22, 1.68], "z0": 0.95, "h": 0.83, "face": "-x", "finish": "black" },
+    { "id": "side_table",  "type": "side_table",  "name": "圆边几",     "room": "living", "x": [0.45, 0.85], "y": [2.60, 2.95], "h": 0.55, "face": "+x", "finish": "walnut" },
+    { "id": "plant",       "type": "plant",       "name": "大盆栽",     "room": "living", "x": [0.02, 0.80], "y": [2.80, 3.50], "h": 1.60, "face": "+x", "finish": "green" },
+    { "id": "frames",      "type": "frames",      "name": "画框组",     "room": "living", "x": [0.00, 0.03], "y": [0.45, 2.15], "z0": 1.20, "h": 0.80, "face": "+x", "finish": "black", "note": "评估射灯光斑时可以先隐藏" },
+    { "id": "fan_living",  "type": "fan",         "name": "客厅吊扇",   "room": "living", "x": [0.73, 2.03], "y": [1.60, 2.90], "z0": 2.25, "h": 0.35, "face": "+y", "finish": "walnut", "note": "五叶木色吸顶吊扇" },
+    { "id": "ac_living",   "type": "ac",          "name": "客厅空调",   "room": "living", "x": [2.545, 2.755], "y": [0.50, 1.40], "z0": 2.24, "h": 0.29, "face": "-x", "finish": "white", "note": "壁挂机，电视墙一侧靠上" },
+
+    { "id": "dining_table", "type": "dining_table", "name": "四人餐桌", "room": "dining", "x": [0.05, 1.20], "y": [4.05, 4.80], "h": 0.75, "face": "+x", "finish": "oak_light", "note": "浅木色，靠沙发墙" },
+    { "id": "chair_1",     "type": "chair",       "name": "餐椅",       "room": "dining", "x": [0.14, 0.58], "y": [3.68, 4.14], "h": 0.80, "face": "+y", "finish": "oak_light" },
+    { "id": "chair_2",     "type": "chair",       "name": "餐椅",       "room": "dining", "x": [0.68, 1.12], "y": [3.68, 4.14], "h": 0.80, "face": "+y", "finish": "oak_light" },
+    { "id": "chair_3",     "type": "chair",       "name": "餐椅",       "room": "dining", "x": [0.14, 0.58], "y": [4.71, 5.17], "h": 0.80, "face": "-y", "finish": "oak_light" },
+    { "id": "chair_4",     "type": "chair",       "name": "餐椅",       "room": "dining", "x": [0.68, 1.12], "y": [4.71, 5.17], "h": 0.80, "face": "-y", "finish": "oak_light" },
+    { "id": "sideboard",   "type": "cabinet",     "name": "边柜",       "room": "dining", "x": [2.35, 2.74], "y": [3.10, 4.60], "h": 0.90, "face": "-x", "finish": "wood_dark" },
+    { "id": "washer",      "type": "washer",      "name": "洗衣机",     "room": "dining", "x": [2.05, 2.65], "y": [6.50, 7.10], "h": 0.85, "face": "-y", "finish": "white" },
+
+    { "id": "entry_cabinet", "type": "entry_cabinet", "name": "入户柜", "room": "foyer", "x": [0.00, 0.35], "y": [7.30, 9.45], "h": 2.30, "face": "+x", "finish": "oak_light", "note": "靠沙发墙，柜内灯带 3 m；位置和尺寸是假设" },
+
+    { "id": "bed2_bed",    "type": "bed",         "name": "次卧双人床", "room": "bedroom2", "x": [4.20, 5.67], "y": [-1.42, 0.48], "h": 0.95, "face": "+y", "finish": "fabric_grey", "note": "床头靠窗墙" },
+    { "id": "bed2_desk",   "type": "desk",        "name": "次卧书桌",   "room": "bedroom2", "x": [3.10, 3.65], "y": [-1.40, -0.40], "h": 0.75, "face": "+x", "finish": "walnut" },
+    { "id": "bed2_chair",  "type": "chair",       "name": "书桌椅",     "room": "bedroom2", "x": [3.55, 4.00], "y": [-1.12, -0.68], "h": 0.80, "face": "-x", "finish": "fabric_grey" },
+    { "id": "bed2_shelf",  "type": "shelf",       "name": "层架",       "room": "bedroom2", "x": [3.10, 3.40], "y": [-0.38, 0.42], "h": 1.90, "face": "+x", "finish": "walnut" },
+    { "id": "bed2_wardrobe", "type": "wardrobe",  "name": "次卧衣柜",   "room": "bedroom2", "x": [4.24, 5.67], "y": [0.98, 1.58], "h": 2.60, "face": "-y", "finish": "oak_light" },
+
+    { "id": "master_bed",  "type": "bed",         "name": "主卧双人床", "room": "master", "x": [6.79, 8.79], "y": [-0.24, 1.56], "h": 1.00, "face": "-x", "finish": "fabric_grey", "note": "床中心离窗墙 2.20（实测）；宽 1.8 长 2.0（假设）" },
+    { "id": "master_nightstand", "type": "nightstand", "name": "床头柜", "room": "master", "x": [8.40, 8.79], "y": [1.60, 2.14], "h": 0.50, "face": "-x", "finish": "walnut" },
+    { "id": "master_desk", "type": "desk",        "name": "主卧书桌",   "room": "master", "x": [8.14, 8.79], "y": [-1.32, -0.32], "h": 0.75, "face": "-x", "finish": "walnut", "note": "在窗前" },
+    { "id": "master_chair", "type": "chair",      "name": "书桌椅",     "room": "master", "x": [7.74, 8.20], "y": [-1.05, -0.59], "h": 0.80, "face": "+x", "finish": "fabric_beige" },
+    { "id": "master_dresser", "type": "dresser",  "name": "五斗柜",     "room": "master", "x": [6.12, 6.52], "y": [-1.28, -0.48], "h": 1.00, "face": "+x", "finish": "walnut" },
+    { "id": "master_wardrobe", "type": "wardrobe", "name": "主卧衣柜",  "room": "master", "x": [6.94, 8.79], "y": [2.26, 3.02], "h": 2.60, "face": "-y", "finish": "oak_light", "opts": { "drawers": true }, "note": "木色到顶，下半截抽屉，在主卫门旁" },
+    { "id": "fan_master",  "type": "fan",         "name": "主卧吊扇 F2", "room": "master", "x": [6.69, 7.89], "y": [0.06, 1.26], "z0": 2.27, "h": 0.33, "face": "+y", "finish": "walnut", "note": "u 1.50，v 2.20，吸顶" },
+    { "id": "ac_master",   "type": "ac",          "name": "主卧空调",   "room": "master", "x": [6.02, 6.90], "y": [2.82, 3.02], "z0": 2.24, "h": 0.29, "face": "-y", "finish": "white" },
+
+    { "id": "kitchen_counter_s", "type": "counter", "name": "厨房台面（灶）", "room": "kitchen", "x": [3.90, 6.53], "y": [6.56, 7.16], "h": 0.88, "face": "-y", "finish": "white", "opts": { "hob": true } },
+    { "id": "kitchen_counter_e", "type": "counter", "name": "厨房台面（水槽）", "room": "kitchen", "x": [5.93, 6.53], "y": [5.42, 6.56], "h": 0.88, "face": "-x", "finish": "white", "opts": { "sink": true } },
+    { "id": "kitchen_upper", "type": "cabinet",   "name": "吊柜",       "room": "kitchen", "x": [3.90, 6.53], "y": [6.82, 7.16], "z0": 1.50, "h": 0.80, "face": "-y", "finish": "white" },
+    { "id": "fridge",      "type": "fridge",      "name": "冰箱",       "room": "kitchen", "x": [3.12, 3.82], "y": [6.48, 7.14], "h": 1.80, "face": "-y", "finish": "grey" },
+
+    { "id": "bath2_vanity", "type": "vanity",     "name": "客卫洗手台", "room": "bath2", "x": [5.12, 5.67], "y": [3.25, 4.25], "h": 0.85, "face": "-x", "finish": "white" },
+    { "id": "bath2_toilet", "type": "toilet",     "name": "客卫马桶",   "room": "bath2", "x": [5.00, 5.67], "y": [4.55, 4.95], "h": 0.42, "face": "-x", "finish": "white" },
+    { "id": "bath2_screen", "type": "glass_panel", "name": "淋浴隔断",  "room": "bath2", "x": [3.97, 3.99], "y": [3.95, 5.22], "h": 2.00, "face": "+x", "finish": "glass" },
+    { "id": "mbath_vanity", "type": "vanity",     "name": "主卫洗手台", "room": "mbath", "x": [5.98, 7.00], "y": [4.70, 5.22], "h": 0.85, "face": "-y", "finish": "white" },
+    { "id": "mbath_toilet", "type": "toilet",     "name": "主卫马桶",   "room": "mbath", "x": [7.15, 7.55], "y": [4.55, 5.22], "h": 0.42, "face": "-y", "finish": "white" },
+    { "id": "mbath_screen", "type": "glass_panel", "name": "淋浴隔断",  "room": "mbath", "x": [7.84, 7.86], "y": [3.20, 5.22], "h": 2.00, "face": "-x", "finish": "glass" }
+  ],
+
+  "finishes": {
+    "floor": "oak_light",
+    "wall": "warm_white"
+  },
+
+  "toConfirm": [
+    { "item": "客厅段长度（阳台门到餐厅端灯带）", "now": "4.50", "why": "按开发商平面图量的，实际可能约 4.9；射灯间距按 4.50 排" },
+    { "item": "原天花高度", "now": "2.60（假设）", "why": "所有边吊高度都从这里往下算" },
+    { "item": "入户走廊手写「2393 高」", "now": "按吊顶高度建模", "why": "不确定是走廊吊顶高度还是柜子高度" },
+    { "item": "沙发墙旧边吊里面", "now": "未知", "why": "空盒子才能做 A、D；是梁就只能 B、C、E1、E2" },
+    { "item": "餐厅端横向边吊", "now": "高 0.30、宽约 0.40", "why": "只在照片里看到，没量" },
+    { "item": "主卧射灯角度", "now": "24° 或 36°", "why": "还没定" },
+    { "item": "门窗洞口、入户柜、厨卫布置", "now": "假设", "why": "文档没给尺寸，按酷家乐平面估" }
+  ]
+}
