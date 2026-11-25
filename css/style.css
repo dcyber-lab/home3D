@@ -160,6 +160,10 @@ button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-v
   #inspector { left: 0; right: 0; top: auto; bottom: 0; width: auto; max-height: 58vh; border-radius: 18px 18px 0 0; z-index: 8; }
   #toast { bottom: auto; top: 62px; }
   .opt { height: 44px; }
+  .room-label { font-size: 11px; padding: 2px 6px; background: rgba(18, 20, 26, 0.5); }
+  .room-label span { display: none; }
+  #panel > header { padding: 10px 12px 9px 16px; }
+  #panel > header .icon { transform: rotate(-90deg); }
   #modal { padding: 0; }
   .dialog { border-radius: 0; }
 }

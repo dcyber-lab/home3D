@@ -112,17 +112,18 @@ export class ViewControls {
     };
     if (duration <= 0) { done(); return; }
     this.orbit.enabled = false;
-    this.tween = { t: 0, duration, p0: cam.position.clone(), q0: cam.quaternion.clone(), p1: pos, q1, f0: fromFov, f1: toFov, done };
+    this.tween = { start: performance.now(), duration, p0: cam.position.clone(), q0: cam.quaternion.clone(), p1: pos, q1, f0: fromFov, f1: toFov, done };
   }
 
   /** 每帧调用 */
   update(dt) {
     const cam = this.camera;
     if (this.tween) {
+      // 按真实时间走：机器慢的时候跳帧，不拖慢动作
       const tw = this.tween;
-      tw.t += dt / tw.duration;
-      if (tw.t >= 1) { tw.done(); return; }
-      const k = ease(tw.t);
+      const t = (performance.now() - tw.start) / 1000 / tw.duration;
+      if (t >= 1) { tw.done(); return; }
+      const k = ease(t);
       cam.position.lerpVectors(tw.p0, tw.p1, k);
       cam.quaternion.slerpQuaternions(tw.q0, tw.q1, k);
       cam.fov = tw.f0 + (tw.f1 - tw.f0) * k;

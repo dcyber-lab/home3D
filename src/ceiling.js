@@ -42,9 +42,9 @@ function coveBand(g, M, lights, { path, closure, under, top, c, strip, channel, 
 }
 
 /** 沿折线放一串朝上的面光源（RectAreaLight 不投阴影，所以必须整条藏在挡边里） */
-function stripLights(g, lights, pts, z, { strip, channel, lumensPerMetre }) {
+function stripLights(g, lights, pts, z, { strip, channel, lumensPerMetre, width }) {
   const lm = lumensPerMetre ?? strip.lumensPerMetre;
-  const w = 0.02;                                   // 面光源的宽度（比真实灯带略宽，采样更稳）
+  const w = width ?? 0.02;                          // 面光源的宽度（比真实灯带略宽，采样更稳）
   const nits = lm / (Math.PI * w);                  // 亮度 = 光通量 / (π · 面积)
   for (let i = 0; i < pts.length - 1; i++) {
     const a = pts[i], b = pts[i + 1];
@@ -215,14 +215,16 @@ export function buildLivingCeiling(data, M, optKey) {
       ring(cc, a0, a1, R - 0.022, R - 0.008, zb + 0.004, zb + 0.008, ledM, { cast: false, receive: false });
     }
     // 面光源：两端走灯槽，沙发墙一侧走铝槽
+    // 转角处的面光源是一段段直线：半径取大一点、分 3 段、做窄一点，
+    // 保证每段的中点都还在铝槽里面（面光源不投阴影，露到槽外会把铝槽外侧照亮）
     const yb = wE - c.lipThickness - c.ledFromLip;
-    const rl = R - 0.015;
+    const rl = R - 0.010;
+    const xl = wS + 0.015;
     stripLights(g, lights, [[W, yb], [c1[0], yb]], opt.under + c.troughFloor + 0.008, { strip, channel: 'cove' });
     stripLights(g, lights, [[c2[0], LEN - yb], [W, LEN - yb]], opt.under + c.troughFloor + 0.008, { strip, channel: 'cove' });
-    stripLights(g, lights, [
-      ...arc(c1, rl, -Math.PI / 2, -Math.PI, 2),
-      ...arc(c2, rl, Math.PI, Math.PI / 2, 2),
-    ], ch.ledZ, { strip, channel: 'cove' });
+    stripLights(g, lights, arc(c1, rl, -Math.PI / 2, -Math.PI, 3), ch.ledZ, { strip, channel: 'cove', width: 0.01 });
+    stripLights(g, lights, [[xl, c1[1]], [xl, c2[1]]], ch.ledZ, { strip, channel: 'cove' });
+    stripLights(g, lights, arc(c2, rl, Math.PI, Math.PI / 2, 3), ch.ledZ, { strip, channel: 'cove', width: 0.01 });
   }
 
   // 射灯 + 检修口

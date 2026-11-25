@@ -67,16 +67,30 @@ export class App extends EventTarget {
     this.gotoView(this.state.view, false);
 
     this.clock = new THREE.Clock();
+    this.frames = 0;
+    let streak = 0, slow = 0, last = 0;
     const loop = () => {
       requestAnimationFrame(loop);
       const dt = Math.min(this.clock.getDelta(), 0.1);
       this.controls.update(dt);
-      if (this.needsRender) {
-        this.needsRender = false;
-        this.updateCutaway();
-        this.renderer.render(this.scene, this.camera);
-        this.labelRenderer.render(this.scene, this.camera);
-        this.frames = (this.frames || 0) + 1;
+      if (!this.needsRender) { streak = 0; return; }
+      this.needsRender = false;
+      this.updateCutaway();
+      this.renderer.render(this.scene, this.camera);
+      this.labelRenderer.render(this.scene, this.camera);
+      this.frames++;
+      // 连续拖动时如果太卡（低于约 20 帧），自动把渲染分辨率降一档
+      const now = performance.now();
+      if (streak > 0 && now - last > 50) slow++;
+      streak++;
+      last = now;
+      if (streak >= 24) {
+        const pr = this.renderer.getPixelRatio();
+        if (slow > 16 && pr > 1) {
+          this.renderer.setPixelRatio(Math.max(1, pr - 0.5));
+          this.resize();
+        }
+        streak = 0; slow = 0;
       }
     };
     loop();
