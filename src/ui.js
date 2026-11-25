@@ -51,6 +51,7 @@ export function initUI(app) {
     if (p.get('s') && data.scenes[p.get('s')]) app.state.scene = p.get('s');
     if (p.get('b')) app.state.masterBeam = Number(p.get('b')) === 36 ? 36 : 24;
     if (p.get('d') === '1') app.state.show.dims = true;
+    if (p.get('sp') === '0') app.state.show.spots = false;
     return p.get('v');
   }
   function writeHash() {
@@ -61,6 +62,7 @@ export function initUI(app) {
     if (s.view) p.set('v', s.view);
     if (s.masterBeam !== 24) p.set('b', s.masterBeam);
     if (s.show.dims) p.set('d', '1');
+    if (!s.show.spots) p.set('sp', '0');
     history.replaceState(null, '', '#' + p.toString());
   }
 
@@ -88,6 +90,7 @@ export function initUI(app) {
   };
   refs.toggles = [
     toggle('家具', () => app.state.show.furniture, (v) => app.setShow('furniture', v)),
+    toggle('射灯', () => app.state.show.spots, (v) => app.setShow('spots', v), '关掉后射灯的灯具和光都不显示，看不带射灯的效果'),
     toggle('画框', () => app.state.show.frames, (v) => app.setShow('frames', v), '评估射灯光斑时可以先拿掉'),
     toggle('窗帘', () => app.state.show.curtains, (v) => app.setShow('curtains', v)),
     toggle('尺寸标注', () => app.state.show.dims, (v) => app.setShow('dims', v)),
@@ -316,8 +319,10 @@ export function initUI(app) {
       h('h3', {}, h('b', {}, s.option), opt.name),
       h('p', {}, opt.shape),
       h('div', { class: 'tags' },
-        h('span', {}, opt.spotZ != null ? `射灯底 ${opt.spotZ.toFixed(2)} m` : '无射灯'),
-        opt.tip ? h('span', {}, `光斑尖离地 ${opt.tip.toFixed(2)} m`) : h('span', {}, '洗墙灯带'),
+        opt.spotZ == null ? h('span', {}, '无射灯')
+          : s.show.spots ? h('span', {}, `射灯底 ${opt.spotZ.toFixed(2)} m`)
+          : h('span', { class: 'off' }, '射灯已隐藏'),
+        opt.tip ? (s.show.spots ? h('span', {}, `光斑尖离地 ${opt.tip.toFixed(2)} m`) : null) : h('span', {}, '洗墙灯带'),
         h('span', {}, `边吊底 ${opt.under.toFixed(2)} m`)),
       opt.caveat ? h('p', { class: 'caveat' }, opt.caveat) : null);
     const sc = data.scenes[s.scene];
@@ -356,6 +361,7 @@ export function initUI(app) {
   const view = readHash();
   if (app.state.option !== before.option) app.rebuildLiving();
   if (app.state.masterBeam !== before.beam) app.rebuildMaster();
+  if (!app.state.show.spots) app.setShow('spots', false);
   app.applyLights();
   app.annotations.sync();
   if (view && data.cameras.some((c) => c.id === view)) app.gotoView(view, false);

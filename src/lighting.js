@@ -80,14 +80,16 @@ export class Lighting {
   }
 
   /**
-   * state: { scene: 场景 id, general: 其他房间基础照明, outside: 相机在屋外, hasSpots: 当前做法有没有射灯 }
+   * state: { scene: 场景 id, general: 其他房间基础照明, outside: 相机在屋外,
+   *          hasSpots: 当前做法有没有射灯, spotsShown: 「显示 → 射灯」有没有开 }
    */
   apply(state) {
     const sc = this.data.scenes[state.scene];
     const day = !!sc.day;
+    const shown = state.spotsShown !== false;
     const on = {
-      spot: sc.spots,
-      spot_master: sc.spots,
+      spot: sc.spots && shown,
+      spot_master: sc.spots && shown,
       cove: sc.cove,
       cove_master: sc.cove,
       wash: sc.wash,
@@ -113,12 +115,12 @@ export class Lighting {
 
     const set = (arr, v) => { for (const l of arr) { l.intensity = v; l.visible = v > 0; } };
     const hasSpots = state.hasSpots;
-    const spotsOn = sc.spots && hasSpots;
+    const spotsOn = sc.spots && hasSpots && shown;
     const washOn = sc.wash && !hasSpots;
     set(this.bounce.livingCove, sc.cove ? 55 : 0);
     set(this.bounce.livingSpot, spotsOn ? 60 : washOn ? 45 : 0);
     set(this.bounce.masterCove, sc.cove ? 40 : 0);
-    set(this.bounce.masterSpot, sc.spots ? 28 : 0);
+    set(this.bounce.masterSpot, on.spot_master ? 28 : 0);
     set(this.general, on.general ? 150 : 0);
 
     for (const l of this.daylight) { l.intensity = day ? l.userData.base : 0; l.visible = day; }

@@ -24,7 +24,7 @@ export class App extends EventTarget {
       view: 'overview',
       masterBeam: data.ceiling.master.beam,
       general: true,
-      show: { furniture: true, frames: true, curtains: true, dims: false, labels: true, colourCode: false, slab: 'auto' },
+      show: { furniture: true, frames: true, curtains: true, spots: true, dims: false, labels: true, colourCode: false, slab: 'auto' },
       clipZ: 3,
       exposure: 0,
     };
@@ -142,6 +142,8 @@ export class App extends EventTarget {
     const built = buildLivingCeiling(this.data, this.M, this.state.option);
     g.add(built.group);
     this.livingInfo = built.info;
+    this.spotGroups = { ...this.spotGroups, living: built.spots };
+    built.spots.visible = this.state.show.spots;
     this.lighting.setLights('living', built.lights);
     // 客厅窗帘的顶跟着阳台端边吊底走
     const cg = this.groups.curtains;
@@ -160,6 +162,8 @@ export class App extends EventTarget {
     const built = buildMasterCeiling(this.data, this.M, this.state.masterBeam);
     g.add(built.group);
     this.masterInfo = built.info;
+    this.spotGroups = { ...this.spotGroups, master: built.spots };
+    built.spots.visible = this.state.show.spots;
     this.lighting.setLights('master', built.lights);
     if (apply) {
       this.applyLights();
@@ -210,6 +214,7 @@ export class App extends EventTarget {
       general: this.state.general,
       outside: this.outside,
       hasSpots: opt.spotZ != null,
+      spotsShown: this.state.show.spots,
     });
     this.invalidate(true);
   }
@@ -256,6 +261,12 @@ export class App extends EventTarget {
       }
     }
     if (key === 'colourCode') this.M.setColourCode(value);
+    if (key === 'spots') {
+      // 隐藏射灯：灯具和它的光一起去掉，射灯的尺寸标注也不画
+      for (const g of Object.values(this.spotGroups || {})) g.visible = value;
+      this.applyLights();
+      this.annotations.rebuild();
+    }
     if (key === 'dims' || key === 'labels') this.annotations.sync();
     this.invalidate(true);
     this.emit('state');
