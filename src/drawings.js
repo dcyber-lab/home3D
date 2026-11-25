@@ -1,6 +1,6 @@
 // 施工图（SVG）：沙发墙吊顶剖面、客厅 / 主卧天花布置、全屋平面。
 // 全部从 data/home.json 的同一套数字画出来，跟 3D 模型不会对不上。
-import { uPath, arc } from './ceiling.js';
+import { uPath, arc, hatchY, livingSpotInfo } from './ceiling.js';
 
 const C = {
   ink: '#1f2328', sub: '#5c6370', line: '#2b2f36',
@@ -139,6 +139,7 @@ function legend(x, y, items) {
 export function sectionSVG(data, key, noSpots = false) {
   const opt = data.ceiling.living.options[key];
   const removed = opt.spotZ != null && noSpots;
+  const info = livingSpotInfo(data, key);
   const S = 7.5;
   const w = 900, h = 82 + (272 - SECTION_BOTTOM * 100) * S + 30;
   let s = text(28, 36, `做法 ${key} · ${opt.name}${removed ? '（不装客厅射灯）' : ''}`, { size: 19, weight: 700 });
@@ -147,7 +148,7 @@ export function sectionSVG(data, key, noSpots = false) {
   const lines = [
     opt.shape,
     removed ? '这个做法不装客厅射灯，沙发墙这一条只有灯带；检修口照留，灯带的驱动要用'
-      : opt.spotZ != null ? `射灯：5 个，离墙 15 cm，嵌在离地 ${opt.spotZ.toFixed(2)} 的底面；光斑最亮尖离地约 ${opt.tip.toFixed(2)} m` : '没有射灯；洗墙灯带藏在旧边吊底下，朝墙往下',
+      : info ? `射灯：${info.count} 个，光束角 ${info.beam}°，离墙 ${cm(info.fromWall)}，${info.spacing ? `间距 ${info.spacing.toFixed(2)} m，` : ''}嵌在离地 ${opt.spotZ.toFixed(2)} 的底面；光斑最亮尖离地约 ${info.tip.toFixed(2)} m` : '没有射灯；洗墙灯带藏在旧边吊底下，朝墙往下',
     opt.kind === 'wash' ? '沙发墙这侧没有朝上的灯槽；阳台端、餐厅端的灯槽照常做' : '灯带在灯槽里，离挡边内侧 7 cm，发光面朝上，只照亮天花',
     opt.caveat && !(removed && /光斑/.test(opt.caveat)) ? `注意：${opt.caveat}` : '',
   ].filter(Boolean);
@@ -191,7 +192,8 @@ export function sectionsAllSVG(data, spotsOff = {}) {
     const removed = opt.spotZ != null && !!spotsOff[k];
     s += text(ox + 10, oy + 22, `${k} · ${opt.name}`, { size: 13.5, weight: 700 });
     s += sectionBody(data, k, S, ox + 4, oy + 34, true, removed);
-    const note = removed ? '不装客厅射灯 · 只有灯带' : opt.tip ? `射灯底 ${opt.spotZ.toFixed(2)} · 光斑尖离地 ${opt.tip.toFixed(2)}` : '无射灯 · 洗墙';
+    const info = livingSpotInfo(data, k);
+    const note = removed ? '不装客厅射灯 · 只有灯带' : info ? `${info.count} 个 ${info.beam}° · 射灯底 ${opt.spotZ.toFixed(2)} · 光斑尖离地 ${info.tip.toFixed(2)}` : '无射灯 · 洗墙';
     s += text(ox + 10, oy + chh - 22, note, { size: 11, fill: C.sub });
   });
   s += legend(w - 150, 14, [[C.old, '旧边吊'], [C.neu, '新做的']]);
@@ -264,8 +266,9 @@ export function livingPlanSVG(data, key, noSpots = false) {
       s += text(X(sx) + 34, Y(ys[0]) - 16, `离墙 ${sx.toFixed(2)}`, { size: 11, fill: C.dim });
     }
     const hs = c.hatch.size;
-    s += `<rect x="${X(sx - hs[0] / 2)}" y="${Y(c.hatch.y - hs[1] / 2)}" width="${hs[0] * S}" height="${hs[1] * S}" fill="none" stroke="${C.dim}" stroke-dasharray="4 3"/>`;
-    s += text(X(sx + hs[0] / 2) + 8, Y(c.hatch.y) + 4, `检修口 ${c.hatch.id}  ${hs[0].toFixed(2)} × ${hs[1].toFixed(2)}`, { size: 11, fill: C.dim });
+    const hy = hatchY(data);
+    s += `<rect x="${X(sx - hs[0] / 2)}" y="${Y(hy - hs[1] / 2)}" width="${hs[0] * S}" height="${hs[1] * S}" fill="none" stroke="${C.dim}" stroke-dasharray="4 3"/>`;
+    s += text(X(sx + hs[0] / 2) + 8, Y(hy) + 4, `检修口 ${c.hatch.id}  ${hs[0].toFixed(2)} × ${hs[1].toFixed(2)}`, { size: 11, fill: C.dim });
   }
   // 吊扇
   const fan = data.furniture.find((f) => f.type === 'fan' && f.room === 'living');
@@ -282,6 +285,7 @@ export function livingPlanSVG(data, key, noSpots = false) {
   s += text(X(0) - 98, Y(L / 2), '沙发墙', { size: 12.5, anchor: 'middle', weight: 700, rotate: -90 });
   s += text(X(W) + 14, Y(0.9), '电视墙（空调侧，不做边吊）', { size: 11.5, fill: C.sub, rotate: 90 });
   s += legend(X(W) + 70, Y(L) - 96, [[C.neu, '新做的边吊'], [C.old, '旧边吊'], [C.led, '灯带']]);
+  if (!removed && opt.spotZ != null) s += text(X(W) + 70, Y(L) - 126, `射灯 ${c.spots.y.length} 个，光束角 ${c.spots.beam}°`, { size: 11.5, fill: C.sub });
   s += text(X(W) + 70, Y(L) - 108, `边吊底离地 ${opt.under.toFixed(2)}${removed ? '，不装客厅射灯' : opt.spotZ != null && opt.spotZ !== opt.under ? `，射灯在 ${opt.spotZ.toFixed(2)} 那层` : ''}`, { size: 11.5, fill: C.sub });
   return wrap(w, h, s, '客厅天花布置');
 }

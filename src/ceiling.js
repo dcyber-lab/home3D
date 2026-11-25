@@ -124,6 +124,41 @@ export function arc(c, r, a0, a1, n) {
 /*  客厅                                                               */
 /* ------------------------------------------------------------------ */
 
+/** n 个射灯沿长度 len 等分：两端各留半个间距（len 4.50、5 个 → 0.45 / 1.35 / 2.25 / 3.15 / 4.05） */
+export function evenSpots(len, n, start = 0) {
+  return Array.from({ length: n }, (_, i) => Math.round((start + (len * (i + 0.5)) / n) * 1000) / 1000);
+}
+
+/** 检修口的位置：放在离设计位置最近的两个射灯正中间，不会压到射灯 */
+export function hatchY(data) {
+  const c = data.ceiling.living.common;
+  const ys = c.spots.y;
+  if (ys.length < 2) return c.hatch.y;
+  let best = null;
+  for (let i = 0; i < ys.length - 1; i++) {
+    const mid = (ys[i] + ys[i + 1]) / 2;
+    if (best == null || Math.abs(mid - c.hatch.y) < Math.abs(best - c.hatch.y)) best = mid;
+  }
+  return best;
+}
+
+/**
+ * 某个做法的客厅射灯：数量、间距、光束角、光斑最亮尖离地多高。做法本身没有射灯时返回 null。
+ * 光斑尖 = 光束边缘（半强度）打到墙上的位置：灯底高度 − 离墙距离 / tan(光束角 / 2)。
+ */
+export function livingSpotInfo(data, key) {
+  const c = data.ceiling.living.common;
+  const opt = data.ceiling.living.options[key];
+  if (!opt || opt.spotZ == null) return null;
+  const ys = c.spots.y;
+  const beam = c.spots.beam;
+  return {
+    ys, count: ys.length, beam, fromWall: c.spots.fromWall, z: opt.spotZ,
+    spacing: ys.length > 1 ? ys[1] - ys[0] : null,
+    tip: opt.spotZ - c.spots.fromWall / Math.tan((beam / 2) * DEG),
+  };
+}
+
 /** opts.spots = false：这个做法不装客厅射灯（检修口照留，灯带驱动也要用） */
 export function buildLivingCeiling(data, M, optKey, opts = {}) {
   const withSpots = opts.spots !== false;
@@ -244,7 +279,8 @@ export function buildLivingCeiling(data, M, optKey, opts = {}) {
     let x1 = Math.min(0.25, (opt.sofaWidth ?? 0.35) - 0.01);
     let x0 = x1 - hs[0];
     if (opt.kind === 'u' && opt.keepOldBox && !opt.lower) { x0 = old.x[1] + 0.01; x1 = x0 + hs[0]; }
-    g.add(box(x0, x1, c.hatch.y - hs[1] / 2, c.hatch.y + hs[1] / 2, opt.spotZ - 0.003, opt.spotZ, M.get('hatch'), { cast: false }));
+    const hy = hatchY(data);
+    g.add(box(x0, x1, hy - hs[1] / 2, hy + hs[1] / 2, opt.spotZ - 0.003, opt.spotZ, M.get('hatch'), { cast: false }));
   }
 
   return { group: g, lights, info: { key: optKey, opt, under: opt.under, spots: spotsAt, hasSpots: spotsAt.length > 0, endUnder: opt.under } };

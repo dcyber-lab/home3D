@@ -4,7 +4,7 @@ import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUnifo
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import { Materials } from './materials.js';
 import { buildShell, buildCurtains } from './shell.js';
-import { buildLivingCeiling, buildMasterCeiling, buildFixedCeiling } from './ceiling.js';
+import { buildLivingCeiling, buildMasterCeiling, buildFixedCeiling, evenSpots } from './ceiling.js';
 import { buildItem } from './furniture.js';
 import { Lighting } from './lighting.js';
 import { ViewControls } from './controls.js';
@@ -212,6 +212,7 @@ export class App extends EventTarget {
       general: this.state.general,
       outside: this.outside,
       livingSpots: this.livingHasSpots(),
+      livingSpotCount: this.data.ceiling.living.common.spots.y.length,
       hasWash: opt.kind === 'wash',
     });
     this.invalidate(true);
@@ -221,6 +222,25 @@ export class App extends EventTarget {
   livingHasSpots(key = this.state.option) {
     const opt = this.data.ceiling.living.options[key];
     return !!opt && opt.spotZ != null && !this.state.spotsOff[key];
+  }
+
+  /**
+   * 客厅射灯的数量和光束角（六个做法共用）。
+   * 数量：沿沙发墙等分重排，两端各留半个间距。光束角：24° / 36° 这类灯具规格。
+   * 直接改 data 里的 ceiling.living.common.spots，所以导出 JSON 时会带上。
+   */
+  setLivingSpotLayout({ count, beam }, rebuild = true) {
+    const Lc = this.data.ceiling.living;
+    const sp = Lc.common.spots;
+    if (count != null) {
+      const n = Math.max(1, Math.min(sp.maxCount || 8, Math.round(count)));
+      sp.y = evenSpots(Lc.y[1] - Lc.y[0], n, Lc.y[0]);
+    }
+    if (beam != null && Number.isFinite(Number(beam))) sp.beam = Math.max(8, Math.min(90, Number(beam)));
+    if (rebuild) {
+      this.rebuildLiving();
+      this.emit('state');
+    }
   }
 
   /** 给某个做法装上 / 移除客厅射灯。每个做法各记各的 */

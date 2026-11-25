@@ -135,26 +135,27 @@
         "lipThickness": 0.012,
         "ledFromLip": 0.07,
         "cornerRadius": 0.30,
-        "spots": { "fromWall": 0.15, "y": [0.45, 1.35, 2.25, 3.15, 4.05], "beam": 24 },
-        "hatch": { "id": "D1", "size": [0.20, 0.30], "y": 2.70 }
+        "spots": { "fromWall": 0.15, "y": [0.45, 1.35, 2.25, 3.15, 4.05], "beam": 24, "beamChoices": [15, 24, 36, 60], "maxCount": 8,
+                   "_note": "y 是每个射灯离阳台门线的距离。页面上调数量时按等分重排：两端各留半个间距；5 个就是文档的 0.45 起、每 0.90" },
+        "hatch": { "id": "D1", "size": [0.20, 0.30], "y": 2.70, "_note": "放在离 y 最近的两个射灯正中间" }
       },
       "options": {
         "A": {
           "name": "拆旧，只做一层 150",
           "shape": "一层：x 0–0.35，z 2.45–2.60",
-          "kind": "u", "sofaWidth": 0.35, "under": 2.45, "keepOldBox": false, "spotZ": 2.45, "tip": 1.74,
+          "kind": "u", "sofaWidth": 0.35, "under": 2.45, "keepOldBox": false, "spotZ": 2.45,
           "caveat": "旧边吊里面是空盒子才能做"
         },
         "B": {
           "name": "旧的保留 + 外面加一层 150",
           "shape": "旧边吊 x 0–0.10、z 2.30–2.60；新边吊 x 0.10–0.35、z 2.45–2.60",
-          "kind": "u", "sofaWidth": 0.35, "under": 2.45, "keepOldBox": true, "spotZ": 2.45, "tip": 1.74,
+          "kind": "u", "sofaWidth": 0.35, "under": 2.45, "keepOldBox": true, "spotZ": 2.45,
           "caveat": "旧边吊会挡掉一点光斑外圈"
         },
         "C": {
           "name": "旧的保留 + 13 cm 挡板洗墙",
           "shape": "旧边吊 x 0–0.10、z 2.30–2.60；外侧挡板 x 0.10–0.118、z 2.17–2.60",
-          "kind": "wash", "under": 2.45, "keepOldBox": true, "spotZ": null, "tip": null,
+          "kind": "wash", "under": 2.45, "keepOldBox": true, "spotZ": null,
           "baffle": { "x": [0.10, 0.118], "z": [2.17, 2.60] },
           "wash": { "x": 0.065, "z": 2.29, "tiltDeg": 18 },
           "caveat": "没有射灯；沙发墙这侧没有朝上的灯槽"
@@ -162,13 +163,13 @@
         "D": {
           "name": "整条做到 300 厚",
           "shape": "一层：x 0–0.35，z 2.30–2.60（整个 U 形都是 300）",
-          "kind": "u", "sofaWidth": 0.35, "under": 2.30, "keepOldBox": false, "spotZ": 2.30, "tip": 1.59,
+          "kind": "u", "sofaWidth": 0.35, "under": 2.30, "keepOldBox": false, "spotZ": 2.30,
           "caveat": "旧边吊里面是空盒子才能做"
         },
         "E1": {
           "name": "旧的整条加宽到 22 cm",
           "shape": "x 0–0.22、z 2.30–2.60 整块；侧面 z 2.435–2.475 有一条凸出 0.035 的上照铝槽",
-          "kind": "e1", "sofaWidth": 0.22, "under": 2.45, "keepOldBox": true, "spotZ": 2.30, "tip": 1.59,
+          "kind": "e1", "sofaWidth": 0.22, "under": 2.45, "keepOldBox": true, "spotZ": 2.30,
           "block": { "x": [0, 0.22], "z": [2.30, 2.60] },
           "channel": { "out": 0.035, "z": [2.435, 2.475], "ledZ": 2.453 },
           "caveat": "灯带离天花 0.15"
@@ -176,7 +177,7 @@
         "E2": {
           "name": "只加宽下半截",
           "shape": "下半截 x 0–0.22、z 2.30–2.45；上半截旧的 x 0–0.12、z 2.45–2.60；台阶上 x 0.12–0.22 是灯槽",
-          "kind": "u", "sofaWidth": 0.22, "under": 2.45, "keepOldBox": true, "spotZ": 2.30, "tip": 1.59,
+          "kind": "u", "sofaWidth": 0.22, "under": 2.45, "keepOldBox": true, "spotZ": 2.30,
           "lower": { "x": [0, 0.22], "z": [2.30, 2.45] },
           "caveat": "22 cm 下半截是直的，一直到阳台墙"
         }

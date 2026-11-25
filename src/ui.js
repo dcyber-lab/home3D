@@ -3,6 +3,7 @@ import { Editor } from './editor.js';
 import { COMPONENTS } from './furniture.js';
 import { FINISHES, FLOOR_FINISHES, WALL_FINISHES } from './materials.js';
 import { DRAWINGS } from './drawings.js';
+import { livingSpotInfo } from './ceiling.js';
 import { round2 } from './geo.js';
 
 /** 小小的 DOM 帮手 */
@@ -46,6 +47,10 @@ export function initUI(app) {
   /* ---------------- 地址栏里记住状态，方便把链接发给施工队 ---------------- */
 
   const hasDefaultNoSpots = Object.values(data.ceiling.living.options).some((o) => o.noSpots);
+  const spotCfg = data.ceiling.living.common.spots;
+  const spotDefaults = { count: spotCfg.y.length, beam: spotCfg.beam };   // 数据里的默认值，链接只记跟它不一样的
+  const beamChoices = spotCfg.beamChoices || [15, 24, 36, 60];
+  const maxSpots = spotCfg.maxCount || 8;
   function readHash() {
     const p = new URLSearchParams(location.hash.slice(1));
     if (p.get('o') && data.ceiling.living.options[p.get('o')]) app.state.option = p.get('o');
@@ -61,6 +66,10 @@ export function initUI(app) {
       // 旧链接：sp=0 表示所有做法都不要客厅射灯
       for (const k of Object.keys(opts)) if (opts[k].spotZ != null) app.state.spotsOff[k] = true;
     }
+    // n = 客厅射灯数量，a = 光束角
+    const n = Number(p.get('n')), a = Number(p.get('a'));
+    if (p.has('n') && n >= 1 && n <= maxSpots) app.setLivingSpotLayout({ count: n }, false);
+    if (p.has('a') && a >= 8 && a <= 90) app.setLivingSpotLayout({ beam: a }, false);
     return p.get('v');
   }
   function writeHash() {
@@ -73,6 +82,8 @@ export function initUI(app) {
     if (s.show.dims) p.set('d', '1');
     const off = Object.keys(data.ceiling.living.options).filter((k) => s.spotsOff[k]);
     if (off.length || hasDefaultNoSpots) p.set('ns', off.join('-'));
+    if (spotCfg.y.length !== spotDefaults.count) p.set('n', spotCfg.y.length);
+    if (spotCfg.beam !== spotDefaults.beam) p.set('a', spotCfg.beam);
     history.replaceState(null, '', '#' + p.toString());
   }
 
@@ -328,6 +339,10 @@ export function initUI(app) {
       b.title = opts[k].name + (removed ? '（已移除客厅射灯）' : '');
     }
     const hasSpots = app.livingHasSpots();
+    const info = livingSpotInfo(data, s.option);
+    const count = spotCfg.y.length;
+    const step = (label, delta, disabled) => h('button', { class: 'icon', disabled, 'aria-label': label, title: label,
+      onclick: () => app.setLivingSpotLayout({ count: count + delta }) }, delta > 0 ? '+' : '−');
     for (const b of refs.sceneButtons) b.classList.toggle('on', b.dataset.k === s.scene);
     for (const b of refs.viewButtons) b.classList.toggle('on', b.dataset.k === s.view);
     for (const b of refs.beamButtons) b.classList.toggle('on', Number(b.dataset.k) === s.masterBeam);
@@ -339,14 +354,24 @@ export function initUI(app) {
         opt.spotZ == null ? h('span', {}, '无射灯')
           : hasSpots ? h('span', {}, `射灯底 ${opt.spotZ.toFixed(2)} m`)
           : h('span', { class: 'off' }, '不装射灯'),
-        opt.tip ? (hasSpots ? h('span', {}, `光斑尖离地 ${opt.tip.toFixed(2)} m`) : null) : h('span', {}, '洗墙灯带'),
+        info ? (hasSpots ? h('span', {}, `光斑尖离地 ${info.tip.toFixed(2)} m`) : null) : h('span', {}, '洗墙灯带'),
         h('span', {}, `边吊底 ${opt.under.toFixed(2)} m`)),
       opt.caveat && (hasSpots || !/光斑/.test(opt.caveat)) ? h('p', { class: 'caveat' }, opt.caveat) : null,
       // 每个做法各自一个开关：关掉 = 这个做法不装客厅射灯。主卧射灯不受影响
       opt.spotZ != null
         ? toggle('客厅射灯', () => app.livingHasSpots(s.option), (v) => app.setLivingSpots(s.option, v),
           '关掉 = 这个做法不装客厅射灯。每个做法各记各的，主卧射灯不受影响')
-        : h('p', { class: 'hint' }, '这个做法本来就没有射灯'));
+        : h('p', { class: 'hint' }, '这个做法本来就没有射灯'),
+      // 数量和光束角：六个做法共用，沿沙发墙等分
+      hasSpots ? h('div', { class: 'field' }, h('span', {}, '数量'),
+        h('div', { class: 'stepper' },
+          step('减少一个射灯', -1, count <= 1),
+          h('output', {}, `${count} 个`),
+          step('增加一个射灯', 1, count >= maxSpots),
+          h('span', { class: 'hint' }, info.spacing ? `间距 ${info.spacing.toFixed(2)} m` : '居中'))) : null,
+      hasSpots ? h('div', { class: 'field' }, h('span', {}, '光束角'),
+        h('div', { class: 'segs' }, beamChoices.map((b) =>
+          h('button', { class: 'seg' + (b === spotCfg.beam ? ' on' : ''), onclick: () => app.setLivingSpotLayout({ beam: b }) }, `${b}°`)))) : null);
     const sc = data.scenes[s.scene];
     refs.sceneHint.textContent = sc.hint || '';
     refs.sceneHint.hidden = !sc.hint;
@@ -379,9 +404,10 @@ export function initUI(app) {
   root.append(panel, reopen, bar, inspector, modal, toastEl);
 
   // 地址栏里带了状态就按它来
-  const before = { option: app.state.option, beam: app.state.masterBeam };
+  const before = { option: app.state.option, beam: app.state.masterBeam, spots: JSON.stringify([spotCfg.y, spotCfg.beam]) };
   const view = readHash();
-  if (app.state.option !== before.option || app.livingHasSpots() !== app.livingInfo.hasSpots) app.rebuildLiving();
+  if (app.state.option !== before.option || app.livingHasSpots() !== app.livingInfo.hasSpots
+    || JSON.stringify([spotCfg.y, spotCfg.beam]) !== before.spots) app.rebuildLiving();
   if (app.state.masterBeam !== before.beam) app.rebuildMaster();
   app.applyLights();
   app.annotations.sync();

@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { V, disposeGroup, fmt } from './geo.js';
+import { livingSpotInfo } from './ceiling.js';
 
 export class Annotations {
   constructor(app) {
@@ -106,7 +107,11 @@ export class Annotations {
       this.dim([sx, 0, z], [sx, ys[0], z], fmt(ys[0]));
       for (let i = 0; i < ys.length - 1; i++) this.dim([sx, ys[i], z], [sx, ys[i + 1], z], fmt(ys[i + 1] - ys[i]));
       this.dim([sx, ys[ys.length - 1], z], [sx, LEN, z], fmt(LEN - ys[ys.length - 1]));
-      if (opt.tip) this.dim([0.004, (ys[2] + ys[3]) / 2, 0], [0.004, (ys[2] + ys[3]) / 2, opt.tip], `光斑尖离地 ${fmt(opt.tip)}`);
+      // 光斑尖的高度标在中间两个射灯之间的墙上
+      const info = livingSpotInfo(data, app.state.option);
+      const mi = Math.floor(ys.length / 2);
+      const ty = ys.length > 1 ? (ys[mi - 1] + ys[mi]) / 2 : ys[0] + 0.35;
+      this.dim([0.004, ty, 0], [0.004, ty, info.tip], `光斑尖离地 ${fmt(info.tip)}`);
     }
 
     const m = data.ceiling.master;

@@ -117,7 +117,7 @@ export class Lighting {
     const spotsOn = on.spot;
     const washOn = sc.wash && !!state.hasWash;
     set(this.bounce.livingCove, sc.cove ? 55 : 0);
-    set(this.bounce.livingSpot, spotsOn ? 60 : washOn ? 45 : 0);
+    set(this.bounce.livingSpot, spotsOn ? 60 * ((state.livingSpotCount || 5) / 5) : washOn ? 45 : 0);
     set(this.bounce.masterCove, sc.cove ? 40 : 0);
     set(this.bounce.masterSpot, on.spot_master ? 28 : 0);
     set(this.general, on.general ? 150 : 0);
