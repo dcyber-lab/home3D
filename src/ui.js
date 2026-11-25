@@ -45,13 +45,22 @@ export function initUI(app) {
 
   /* ---------------- 地址栏里记住状态，方便把链接发给施工队 ---------------- */
 
+  const hasDefaultNoSpots = Object.values(data.ceiling.living.options).some((o) => o.noSpots);
   function readHash() {
     const p = new URLSearchParams(location.hash.slice(1));
     if (p.get('o') && data.ceiling.living.options[p.get('o')]) app.state.option = p.get('o');
     if (p.get('s') && data.scenes[p.get('s')]) app.state.scene = p.get('s');
     if (p.get('b')) app.state.masterBeam = Number(p.get('b')) === 36 ? 36 : 24;
     if (p.get('d') === '1') app.state.show.dims = true;
-    if (p.get('sp') === '0') app.state.show.spots = false;
+    // ns = 哪些做法移除了客厅射灯，例如 ns=A-D。带了这个参数就完全按它来
+    const opts = data.ceiling.living.options;
+    if (p.has('ns')) {
+      app.state.spotsOff = {};
+      for (const k of p.get('ns').split(/[-,.]/)) if (opts[k] && opts[k].spotZ != null) app.state.spotsOff[k] = true;
+    } else if (p.get('sp') === '0') {
+      // 旧链接：sp=0 表示所有做法都不要客厅射灯
+      for (const k of Object.keys(opts)) if (opts[k].spotZ != null) app.state.spotsOff[k] = true;
+    }
     return p.get('v');
   }
   function writeHash() {
@@ -62,7 +71,8 @@ export function initUI(app) {
     if (s.view) p.set('v', s.view);
     if (s.masterBeam !== 24) p.set('b', s.masterBeam);
     if (s.show.dims) p.set('d', '1');
-    if (!s.show.spots) p.set('sp', '0');
+    const off = Object.keys(data.ceiling.living.options).filter((k) => s.spotsOff[k]);
+    if (off.length || hasDefaultNoSpots) p.set('ns', off.join('-'));
     history.replaceState(null, '', '#' + p.toString());
   }
 
@@ -90,7 +100,6 @@ export function initUI(app) {
   };
   refs.toggles = [
     toggle('家具', () => app.state.show.furniture, (v) => app.setShow('furniture', v)),
-    toggle('射灯', () => app.state.show.spots, (v) => app.setShow('spots', v), '关掉后射灯的灯具和光都不显示，看不带射灯的效果'),
     toggle('画框', () => app.state.show.frames, (v) => app.setShow('frames', v), '评估射灯光斑时可以先拿掉'),
     toggle('窗帘', () => app.state.show.curtains, (v) => app.setShow('curtains', v)),
     toggle('尺寸标注', () => app.state.show.dims, (v) => app.setShow('dims', v)),
@@ -310,7 +319,15 @@ export function initUI(app) {
   function sync() {
     const s = app.state;
     const opt = data.ceiling.living.options[s.option];
-    for (const b of refs.optButtons) b.classList.toggle('on', b.dataset.k === s.option);
+    const opts = data.ceiling.living.options;
+    for (const b of refs.optButtons) {
+      const k = b.dataset.k;
+      const removed = opts[k].spotZ != null && !!s.spotsOff[k];
+      b.classList.toggle('on', k === s.option);
+      b.classList.toggle('nospot', removed);
+      b.title = opts[k].name + (removed ? '（已移除客厅射灯）' : '');
+    }
+    const hasSpots = app.livingHasSpots();
     for (const b of refs.sceneButtons) b.classList.toggle('on', b.dataset.k === s.scene);
     for (const b of refs.viewButtons) b.classList.toggle('on', b.dataset.k === s.view);
     for (const b of refs.beamButtons) b.classList.toggle('on', Number(b.dataset.k) === s.masterBeam);
@@ -320,11 +337,16 @@ export function initUI(app) {
       h('p', {}, opt.shape),
       h('div', { class: 'tags' },
         opt.spotZ == null ? h('span', {}, '无射灯')
-          : s.show.spots ? h('span', {}, `射灯底 ${opt.spotZ.toFixed(2)} m`)
-          : h('span', { class: 'off' }, '射灯已隐藏'),
-        opt.tip ? (s.show.spots ? h('span', {}, `光斑尖离地 ${opt.tip.toFixed(2)} m`) : null) : h('span', {}, '洗墙灯带'),
+          : hasSpots ? h('span', {}, `射灯底 ${opt.spotZ.toFixed(2)} m`)
+          : h('span', { class: 'off' }, '不装射灯'),
+        opt.tip ? (hasSpots ? h('span', {}, `光斑尖离地 ${opt.tip.toFixed(2)} m`) : null) : h('span', {}, '洗墙灯带'),
         h('span', {}, `边吊底 ${opt.under.toFixed(2)} m`)),
-      opt.caveat ? h('p', { class: 'caveat' }, opt.caveat) : null);
+      opt.caveat && (hasSpots || !/光斑/.test(opt.caveat)) ? h('p', { class: 'caveat' }, opt.caveat) : null,
+      // 每个做法各自一个开关：关掉 = 这个做法不装客厅射灯。主卧射灯不受影响
+      opt.spotZ != null
+        ? toggle('客厅射灯', () => app.livingHasSpots(s.option), (v) => app.setLivingSpots(s.option, v),
+          '关掉 = 这个做法不装客厅射灯。每个做法各记各的，主卧射灯不受影响')
+        : h('p', { class: 'hint' }, '这个做法本来就没有射灯'));
     const sc = data.scenes[s.scene];
     refs.sceneHint.textContent = sc.hint || '';
     refs.sceneHint.hidden = !sc.hint;
@@ -359,9 +381,8 @@ export function initUI(app) {
   // 地址栏里带了状态就按它来
   const before = { option: app.state.option, beam: app.state.masterBeam };
   const view = readHash();
-  if (app.state.option !== before.option) app.rebuildLiving();
+  if (app.state.option !== before.option || app.livingHasSpots() !== app.livingInfo.hasSpots) app.rebuildLiving();
   if (app.state.masterBeam !== before.beam) app.rebuildMaster();
-  if (!app.state.show.spots) app.setShow('spots', false);
   app.applyLights();
   app.annotations.sync();
   if (view && data.cameras.some((c) => c.id === view)) app.gotoView(view, false);

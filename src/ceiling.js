@@ -124,7 +124,9 @@ export function arc(c, r, a0, a1, n) {
 /*  客厅                                                               */
 /* ------------------------------------------------------------------ */
 
-export function buildLivingCeiling(data, M, optKey) {
+/** opts.spots = false：这个做法不装客厅射灯（检修口照留，灯带驱动也要用） */
+export function buildLivingCeiling(data, M, optKey, opts = {}) {
+  const withSpots = opts.spots !== false;
   const g = new THREE.Group();
   g.name = 'living-ceiling-' + optKey;
   const lights = [];
@@ -227,18 +229,17 @@ export function buildLivingCeiling(data, M, optKey) {
     stripLights(g, lights, arc(c2, rl, Math.PI, Math.PI / 2, 3), ch.ledZ, { strip, channel: 'cove', width: 0.01 });
   }
 
-  // 射灯 + 检修口。射灯单独一组，「显示 → 射灯」关掉时整组隐藏
-  const spots = new THREE.Group();
-  spots.name = 'spots';
-  g.add(spots);
+  // 射灯 + 检修口
   const spotsAt = [];
   if (opt.spotZ != null) {
-    c.spots.y.forEach((y, i) => {
-      addSpot(spots, M, lights, c.spots.fromWall, y, opt.spotZ, {
-        spot: data.lights.spot, beam: c.spots.beam, channel: 'spot', glowMat: 'spot_glow', id: 'S' + (i + 1),
+    if (withSpots) {
+      c.spots.y.forEach((y, i) => {
+        addSpot(g, M, lights, c.spots.fromWall, y, opt.spotZ, {
+          spot: data.lights.spot, beam: c.spots.beam, channel: 'spot', glowMat: 'spot_glow', id: 'S' + (i + 1),
+        });
+        spotsAt.push([c.spots.fromWall, y, opt.spotZ]);
       });
-      spotsAt.push([c.spots.fromWall, y, opt.spotZ]);
-    });
+    }
     const hs = c.hatch.size;
     let x1 = Math.min(0.25, (opt.sofaWidth ?? 0.35) - 0.01);
     let x0 = x1 - hs[0];
@@ -246,7 +247,7 @@ export function buildLivingCeiling(data, M, optKey) {
     g.add(box(x0, x1, c.hatch.y - hs[1] / 2, c.hatch.y + hs[1] / 2, opt.spotZ - 0.003, opt.spotZ, M.get('hatch'), { cast: false }));
   }
 
-  return { group: g, spots, lights, info: { key: optKey, opt, under: opt.under, spots: spotsAt, endUnder: opt.under } };
+  return { group: g, lights, info: { key: optKey, opt, under: opt.under, spots: spotsAt, hasSpots: spotsAt.length > 0, endUnder: opt.under } };
 }
 
 /** 不随做法变化的部分：餐厅以后的旧边吊、餐厅端横向边吊、入户走廊低吊顶 */
@@ -308,13 +309,10 @@ export function buildMasterCeiling(data, M, beam) {
     path: (o, n) => pathUV(o, n).map(map),
     closure: [[0, VV], [0, 0], [U, 0]].map(map),
   });
-  const spots = new THREE.Group();
-  spots.name = 'spots';
-  g.add(spots);
   const spotsAt = [];
   for (const s of m.spots) {
     const [x, y] = map([s.u, s.v]);
-    addSpot(spots, M, lights, x, y, m.under, {
+    addSpot(g, M, lights, x, y, m.under, {
       spot: data.lights.spot, beam, channel: 'spot_master', glowMat: 'spot_glow_master', id: s.id,
     });
     spotsAt.push([x, y, m.under, s.id]);
@@ -323,5 +321,5 @@ export function buildMasterCeiling(data, M, beam) {
   const [hx0, hy0] = map([0.01 + hs[0], m.hatch.v - hs[1] / 2]);
   const [hx1, hy1] = map([0.01, m.hatch.v + hs[1] / 2]);
   g.add(box(hx0, hx1, hy0, hy1, m.under - 0.003, m.under, M.get('hatch'), { cast: false }));
-  return { group: g, spots, lights, info: { spots: spotsAt, under: m.under, beam } };
+  return { group: g, lights, info: { spots: spotsAt, under: m.under, beam } };
 }

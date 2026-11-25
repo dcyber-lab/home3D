@@ -340,6 +340,10 @@ export class Editor extends EventTarget {
     delete d.meta.localEdits;
     d.finishes = { floor: app.M.floorFinish, wall: app.M.wallFinish };
     d.ceiling.living.default = app.state.option;
+    for (const [k, o] of Object.entries(d.ceiling.living.options)) {
+      if (app.state.spotsOff[k]) o.noSpots = true;
+      else delete o.noSpots;
+    }
     d.ceiling.master.beam = app.state.masterBeam;
     d.lights.defaultScene = app.state.scene;
     return d;

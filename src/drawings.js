@@ -42,8 +42,8 @@ function wrap(w, h, body, title) {
 /*  剖面                                                               */
 /* ------------------------------------------------------------------ */
 
-/** 一个做法在沙发墙这一条的剖面零件（单位 m） */
-export function sectionParts(data, key) {
+/** 一个做法在沙发墙这一条的剖面零件（单位 m）。noSpots = 这个做法移除了客厅射灯 */
+export function sectionParts(data, key, noSpots = false) {
   const Lc = data.ceiling.living, c = Lc.common, opt = Lc.options[key];
   const H = data.heights.ceiling, old = data.ceiling.oldBox;
   const parts = [];           // { x0, x1, z0, z1, kind: 'new' | 'old' | 'alu' }
@@ -68,7 +68,7 @@ export function sectionParts(data, key) {
     leds.push({ x: b.x[1] + 0.015, z: ch.z[0] + 0.012, dir: 'up' });
   }
   if (opt.keepOldBox) R(old.x[0], old.x[1], old.z[0], old.z[1], 'old');
-  const spot = opt.spotZ != null ? { x: c.spots.fromWall, z: opt.spotZ } : null;
+  const spot = opt.spotZ != null && !noSpots ? { x: c.spots.fromWall, z: opt.spotZ } : null;
   const lowest = Math.min(...parts.map((p) => p.z0));
   const widest = Math.max(...parts.filter((p) => p.kind !== 'alu').map((p) => p.x1));
   return { parts, leds, spot, opt, H, lowest, widest, old };
@@ -76,8 +76,8 @@ export function sectionParts(data, key) {
 
 const SECTION_BOTTOM = 2.04;   // 剖面图里墙画到离地多高为止
 
-function sectionBody(data, key, S, ox, oy, compact) {
-  const sec = sectionParts(data, key);
+function sectionBody(data, key, S, ox, oy, compact, noSpots = false) {
+  const sec = sectionParts(data, key, noSpots);
   const { opt, H } = sec;
   const old = data.ceiling.oldBox;
   const X = (x) => ox + (x * 100 + 12) * S;
@@ -136,18 +136,20 @@ function legend(x, y, items) {
   return s;
 }
 
-export function sectionSVG(data, key) {
+export function sectionSVG(data, key, noSpots = false) {
   const opt = data.ceiling.living.options[key];
+  const removed = opt.spotZ != null && noSpots;
   const S = 7.5;
   const w = 900, h = 82 + (272 - SECTION_BOTTOM * 100) * S + 30;
-  let s = text(28, 36, `做法 ${key} · ${opt.name}`, { size: 19, weight: 700 });
+  let s = text(28, 36, `做法 ${key} · ${opt.name}${removed ? '（不装客厅射灯）' : ''}`, { size: 19, weight: 700 });
   s += text(28, 58, '沙发墙这一条的剖面（从阳台往餐厅方向看：左边是墙，上边是原天花）', { size: 12, fill: C.sub });
-  s += sectionBody(data, key, S, 24, 82, false);
+  s += sectionBody(data, key, S, 24, 82, false, noSpots);
   const lines = [
     opt.shape,
-    opt.spotZ != null ? `射灯：5 个，离墙 15 cm，嵌在离地 ${opt.spotZ.toFixed(2)} 的底面；光斑最亮尖离地约 ${opt.tip.toFixed(2)} m` : '没有射灯；洗墙灯带藏在旧边吊底下，朝墙往下',
+    removed ? '这个做法不装客厅射灯，沙发墙这一条只有灯带；检修口照留，灯带的驱动要用'
+      : opt.spotZ != null ? `射灯：5 个，离墙 15 cm，嵌在离地 ${opt.spotZ.toFixed(2)} 的底面；光斑最亮尖离地约 ${opt.tip.toFixed(2)} m` : '没有射灯；洗墙灯带藏在旧边吊底下，朝墙往下',
     opt.kind === 'wash' ? '沙发墙这侧没有朝上的灯槽；阳台端、餐厅端的灯槽照常做' : '灯带在灯槽里，离挡边内侧 7 cm，发光面朝上，只照亮天花',
-    opt.caveat ? `注意：${opt.caveat}` : '',
+    opt.caveat && !(removed && /光斑/.test(opt.caveat)) ? `注意：${opt.caveat}` : '',
   ].filter(Boolean);
   // 右侧说明
   let yy = 120;
@@ -156,7 +158,9 @@ export function sectionSVG(data, key) {
     for (const row of breakText(t, 22)) { yy += 19; s += text(610, yy, row, { size: 12, fill: C.sub }); }
     yy += 8;
   }
-  s += legend(610, yy + 16, [[C.old, '旧边吊（保留）'], [C.neu, '新做的'], [C.alu, '铝槽'], [C.led, '灯带'], [C.spot, '射灯']]);
+  const items = [[C.old, '旧边吊（保留）'], [C.neu, '新做的'], [C.alu, '铝槽'], [C.led, '灯带']];
+  if (opt.spotZ != null && !removed) items.push([C.spot, '射灯']);
+  s += legend(610, yy + 16, items);
   return wrap(w, h, s, `做法 ${key} 剖面`);
 }
 
@@ -175,7 +179,7 @@ function breakText(t, width) {
   return rows;
 }
 
-export function sectionsAllSVG(data) {
+export function sectionsAllSVG(data, spotsOff = {}) {
   const keys = Object.keys(data.ceiling.living.options);
   const S = 4.2;
   const cw = 420, chh = 372;
@@ -184,9 +188,10 @@ export function sectionsAllSVG(data) {
   keys.forEach((k, i) => {
     const ox = 12 + (i % 3) * cw, oy = 60 + Math.floor(i / 3) * chh;
     const opt = data.ceiling.living.options[k];
+    const removed = opt.spotZ != null && !!spotsOff[k];
     s += text(ox + 10, oy + 22, `${k} · ${opt.name}`, { size: 13.5, weight: 700 });
-    s += sectionBody(data, k, S, ox + 4, oy + 34, true);
-    const note = opt.tip ? `射灯底 ${opt.spotZ.toFixed(2)} · 光斑尖离地 ${opt.tip.toFixed(2)}` : '无射灯 · 洗墙';
+    s += sectionBody(data, k, S, ox + 4, oy + 34, true, removed);
+    const note = removed ? '不装客厅射灯 · 只有灯带' : opt.tip ? `射灯底 ${opt.spotZ.toFixed(2)} · 光斑尖离地 ${opt.tip.toFixed(2)}` : '无射灯 · 洗墙';
     s += text(ox + 10, oy + chh - 22, note, { size: 11, fill: C.sub });
   });
   s += legend(w - 150, 14, [[C.old, '旧边吊'], [C.neu, '新做的']]);
@@ -199,14 +204,14 @@ export function sectionsAllSVG(data) {
 
 const pts = (arr, X, Y) => arr.map((p) => `${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join(' ');
 
-export function livingPlanSVG(data, key) {
+export function livingPlanSVG(data, key, noSpots = false) {
   const Lc = data.ceiling.living, c = Lc.common, opt = Lc.options[key];
   const W = Lc.x[1], L = Lc.y[1];
   const S = 118, ox = 150, oy = 150;
   const X = (x) => ox + x * S, Y = (y) => oy + y * S;
   const w = ox + W * S + 300, h = oy + L * S + 70;
   const old = data.ceiling.oldBox;
-  let s = text(28, 36, `客厅天花布置 · 做法 ${key}（${opt.name}）`, { size: 19, weight: 700 });
+  let s = text(28, 36, `客厅天花布置 · 做法 ${key}（${opt.name}${opt.spotZ != null && noSpots ? '，不装客厅射灯' : ''}）`, { size: 19, weight: 700 });
   s += text(28, 58, '从上往下看，方向跟平面图一致：上边是阳台，左边是沙发墙。单位 m。', { size: 12, fill: C.sub });
   s += `<rect x="${X(0)}" y="${Y(0)}" width="${W * S}" height="${L * S}" fill="#fafafa" stroke="${C.line}" stroke-width="2.5"/>`;
   const wE = c.endBand, R = c.cornerRadius;
@@ -245,16 +250,19 @@ export function livingPlanSVG(data, key) {
   s += dimV(X(1.9), Y(0), Y(wE), `${wE.toFixed(2)}`);
   s += dimV(X(1.9), Y(L - wE), Y(L), `${wE.toFixed(2)}`);
   // 射灯 + 检修口
+  const removed = opt.spotZ != null && noSpots;
   if (opt.spotZ != null) {
     const sx = c.spots.fromWall, ys = c.spots.y;
-    ys.forEach((y, i) => {
-      s += `<circle cx="${X(sx)}" cy="${Y(y)}" r="${0.045 * S}" fill="#fff" stroke="${C.line}" stroke-width="1.4"/><path d="M${X(sx) - 8} ${Y(y)}h16M${X(sx)} ${Y(y) - 8}v16" stroke="${C.line}" stroke-width="0.8"/>`;
-      s += text(X(-0.12), Y(y) + 4, `S${i + 1}`, { size: 11.5, anchor: 'end', weight: 700 });
-    });
-    const chain = [0, ...ys, L];
-    for (let i = 0; i < chain.length - 1; i++) s += dimV(X(-0.52), Y(chain[i]), Y(chain[i + 1]), (chain[i + 1] - chain[i]).toFixed(2), { left: true });
-    s += dimH(X(0), X(sx), Y(ys[0]) - 20, '', {});
-    s += text(X(sx) + 34, Y(ys[0]) - 16, `离墙 ${sx.toFixed(2)}`, { size: 11, fill: C.dim });
+    if (!removed) {
+      ys.forEach((y, i) => {
+        s += `<circle cx="${X(sx)}" cy="${Y(y)}" r="${0.045 * S}" fill="#fff" stroke="${C.line}" stroke-width="1.4"/><path d="M${X(sx) - 8} ${Y(y)}h16M${X(sx)} ${Y(y) - 8}v16" stroke="${C.line}" stroke-width="0.8"/>`;
+        s += text(X(-0.12), Y(y) + 4, `S${i + 1}`, { size: 11.5, anchor: 'end', weight: 700 });
+      });
+      const chain = [0, ...ys, L];
+      for (let i = 0; i < chain.length - 1; i++) s += dimV(X(-0.52), Y(chain[i]), Y(chain[i + 1]), (chain[i + 1] - chain[i]).toFixed(2), { left: true });
+      s += dimH(X(0), X(sx), Y(ys[0]) - 20, '', {});
+      s += text(X(sx) + 34, Y(ys[0]) - 16, `离墙 ${sx.toFixed(2)}`, { size: 11, fill: C.dim });
+    }
     const hs = c.hatch.size;
     s += `<rect x="${X(sx - hs[0] / 2)}" y="${Y(c.hatch.y - hs[1] / 2)}" width="${hs[0] * S}" height="${hs[1] * S}" fill="none" stroke="${C.dim}" stroke-dasharray="4 3"/>`;
     s += text(X(sx + hs[0] / 2) + 8, Y(c.hatch.y) + 4, `检修口 ${c.hatch.id}  ${hs[0].toFixed(2)} × ${hs[1].toFixed(2)}`, { size: 11, fill: C.dim });
@@ -274,7 +282,7 @@ export function livingPlanSVG(data, key) {
   s += text(X(0) - 98, Y(L / 2), '沙发墙', { size: 12.5, anchor: 'middle', weight: 700, rotate: -90 });
   s += text(X(W) + 14, Y(0.9), '电视墙（空调侧，不做边吊）', { size: 11.5, fill: C.sub, rotate: 90 });
   s += legend(X(W) + 70, Y(L) - 96, [[C.neu, '新做的边吊'], [C.old, '旧边吊'], [C.led, '灯带']]);
-  s += text(X(W) + 70, Y(L) - 108, `边吊底离地 ${opt.under.toFixed(2)}${opt.spotZ != null && opt.spotZ !== opt.under ? `，射灯在 ${opt.spotZ.toFixed(2)} 那层` : ''}`, { size: 11.5, fill: C.sub });
+  s += text(X(W) + 70, Y(L) - 108, `边吊底离地 ${opt.under.toFixed(2)}${removed ? '，不装客厅射灯' : opt.spotZ != null && opt.spotZ !== opt.under ? `，射灯在 ${opt.spotZ.toFixed(2)} 那层` : ''}`, { size: 11.5, fill: C.sub });
   return wrap(w, h, s, '客厅天花布置');
 }
 
@@ -428,9 +436,9 @@ export function floorPlanSVG(data) {
 }
 
 export const DRAWINGS = [
-  { id: 'section', name: '当前做法剖面', make: (app) => sectionSVG(app.data, app.state.option) },
-  { id: 'sections', name: '六种剖面对比', make: (app) => sectionsAllSVG(app.data) },
-  { id: 'living', name: '客厅天花布置', make: (app) => livingPlanSVG(app.data, app.state.option) },
+  { id: 'section', name: '当前做法剖面', make: (app) => sectionSVG(app.data, app.state.option, !!app.state.spotsOff[app.state.option]) },
+  { id: 'sections', name: '六种剖面对比', make: (app) => sectionsAllSVG(app.data, app.state.spotsOff) },
+  { id: 'living', name: '客厅天花布置', make: (app) => livingPlanSVG(app.data, app.state.option, !!app.state.spotsOff[app.state.option]) },
   { id: 'master', name: '主卧天花布置', make: (app) => masterPlanSVG(app.data, app.state.masterBeam) },
   { id: 'plan', name: '全屋平面', make: (app) => floorPlanSVG(app.data) },
 ];

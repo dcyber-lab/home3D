@@ -24,7 +24,9 @@ export class App extends EventTarget {
       view: 'overview',
       masterBeam: data.ceiling.master.beam,
       general: true,
-      show: { furniture: true, frames: true, curtains: true, spots: true, dims: false, labels: true, colourCode: false, slab: 'auto' },
+      show: { furniture: true, frames: true, curtains: true, dims: false, labels: true, colourCode: false, slab: 'auto' },
+      // 每个做法各自记：客厅射灯有没有被移除（主卧射灯不受影响）
+      spotsOff: Object.fromEntries(Object.entries(data.ceiling.living.options).filter(([, o]) => o.noSpots).map(([k]) => [k, true])),
       clipZ: 3,
       exposure: 0,
     };
@@ -139,11 +141,9 @@ export class App extends EventTarget {
   rebuildLiving(apply = true) {
     const g = this.groups.living;
     disposeGroup(g);
-    const built = buildLivingCeiling(this.data, this.M, this.state.option);
+    const built = buildLivingCeiling(this.data, this.M, this.state.option, { spots: this.livingHasSpots() });
     g.add(built.group);
     this.livingInfo = built.info;
-    this.spotGroups = { ...this.spotGroups, living: built.spots };
-    built.spots.visible = this.state.show.spots;
     this.lighting.setLights('living', built.lights);
     // 客厅窗帘的顶跟着阳台端边吊底走
     const cg = this.groups.curtains;
@@ -162,8 +162,6 @@ export class App extends EventTarget {
     const built = buildMasterCeiling(this.data, this.M, this.state.masterBeam);
     g.add(built.group);
     this.masterInfo = built.info;
-    this.spotGroups = { ...this.spotGroups, master: built.spots };
-    built.spots.visible = this.state.show.spots;
     this.lighting.setLights('master', built.lights);
     if (apply) {
       this.applyLights();
@@ -213,10 +211,26 @@ export class App extends EventTarget {
       scene: this.state.scene,
       general: this.state.general,
       outside: this.outside,
-      hasSpots: opt.spotZ != null,
-      spotsShown: this.state.show.spots,
+      livingSpots: this.livingHasSpots(),
+      hasWash: opt.kind === 'wash',
     });
     this.invalidate(true);
+  }
+
+  /** 这个做法现在装不装客厅射灯（做法本身没有射灯，或者被开关移除了，都算不装） */
+  livingHasSpots(key = this.state.option) {
+    const opt = this.data.ceiling.living.options[key];
+    return !!opt && opt.spotZ != null && !this.state.spotsOff[key];
+  }
+
+  /** 给某个做法装上 / 移除客厅射灯。每个做法各记各的 */
+  setLivingSpots(key, on) {
+    const opt = this.data.ceiling.living.options[key];
+    if (!opt || opt.spotZ == null) return;
+    if (on) delete this.state.spotsOff[key];
+    else this.state.spotsOff[key] = true;
+    if (key === this.state.option) this.rebuildLiving();
+    this.emit('state');
   }
 
   setOption(key) {
@@ -261,12 +275,6 @@ export class App extends EventTarget {
       }
     }
     if (key === 'colourCode') this.M.setColourCode(value);
-    if (key === 'spots') {
-      // 隐藏射灯：灯具和它的光一起去掉，射灯的尺寸标注也不画
-      for (const g of Object.values(this.spotGroups || {})) g.visible = value;
-      this.applyLights();
-      this.annotations.rebuild();
-    }
     if (key === 'dims' || key === 'labels') this.annotations.sync();
     this.invalidate(true);
     this.emit('state');

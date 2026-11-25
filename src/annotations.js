@@ -98,8 +98,7 @@ export class Annotations {
       const zU = opt.lower ? opt.lower.z[0] : opt.block ? opt.block.z[0] : opt.under;
       this.dim([0, 3.6, zU - 0.004], [wS, 3.6, zU - 0.004], `宽 ${fmt(wS)}`);
     }
-    const showSpots = app.state.show.spots;
-    if (opt.spotZ != null && showSpots) {
+    if (app.livingHasSpots()) {
       const sx = c.spots.fromWall;
       const ys = c.spots.y;
       const z = opt.spotZ - 0.004;
@@ -117,7 +116,7 @@ export class Annotations {
     this.dim([hx - m.headBand, wy + 2.7, m.under - 0.004], [hx, wy + 2.7, m.under - 0.004], fmt(m.headBand));
     this.dim([hx - 1.6, wy, m.under - 0.004], [hx - 1.6, wy + m.windowBand, m.under - 0.004], fmt(m.windowBand));
     let prev = 0;
-    for (const s of showSpots ? m.spots : []) {
+    for (const s of m.spots) {
       this.dim([hx - s.u, wy + prev, m.under - 0.004], [hx - s.u, wy + s.v, m.under - 0.004], `${s.id} ${fmt(s.v - prev)}`);
       prev = s.v;
     }
