@@ -378,7 +378,7 @@ export class Editor extends EventTarget {
     const app = this.app;
     const d = JSON.parse(JSON.stringify(app.data));
     delete d.meta.localEdits;
-    d.finishes = { floor: app.M.floorFinish, wall: app.M.wallFinish };
+    d.finishes = { floor: app.M.floorFinish, wall: app.M.wallFinish, ceiling: app.M.ceilingFinish };
     d.ceiling.living.default = app.state.option;
     for (const [k, o] of Object.entries(d.ceiling.living.options)) {
       if (app.state.spotsOff[k]) o.noSpots = true;

@@ -1,7 +1,7 @@
 // 界面：左边控制面板、右边组件面板、底部操作提示、施工图弹窗。
 import { Editor } from './editor.js';
 import { COMPONENTS } from './furniture.js';
-import { FINISHES, FLOOR_FINISHES, WALL_FINISHES } from './materials.js';
+import { FINISHES, FLOOR_FINISHES } from './materials.js';
 import { DRAWINGS } from './drawings.js';
 import { livingSpotInfo } from './ceiling.js';
 import { buildShare, encodeShare, shareURL } from './share.js';
@@ -58,6 +58,7 @@ export function initUI(app, opts = {}) {
   const spotDefaults = { count: spotCfg.y.length, beam: spotCfg.beam };   // 数据里的默认值，链接只记跟它不一样的
   const beamChoices = spotCfg.beamChoices || [15, 24, 36, 60];
   const maxSpots = spotCfg.maxCount || 8;
+  const paintDefaults = { wall: app.M.wallFinish, ceiling: app.M.ceilingFinish };   // 打开时的颜色，链接只记跟它不一样的
   function readHash() {
     const p = new URLSearchParams(location.hash.slice(1));
     if (p.get('o') && data.ceiling.living.options[p.get('o')]) app.state.option = p.get('o');
@@ -73,6 +74,9 @@ export function initUI(app, opts = {}) {
       // 旧链接：sp=0 表示所有做法都不要客厅射灯
       for (const k of Object.keys(opts)) if (opts[k].spotZ != null) app.state.spotsOff[k] = true;
     }
+    // w = 墙面颜色，c = 天花和边吊的颜色
+    if (p.get('w')) app.M.setWall(p.get('w'));
+    if (p.get('c')) app.M.setCeiling(p.get('c'));
     // n = 客厅射灯数量，a = 光束角
     const n = Number(p.get('n')), a = Number(p.get('a'));
     if (p.has('n') && n >= 1 && n <= maxSpots) app.setLivingSpotLayout({ count: n }, false);
@@ -92,6 +96,8 @@ export function initUI(app, opts = {}) {
     if (off.length || hasDefaultNoSpots) p.set('ns', off.join('-'));
     if (spotCfg.y.length !== spotDefaults.count) p.set('n', spotCfg.y.length);
     if (spotCfg.beam !== spotDefaults.beam) p.set('a', spotCfg.beam);
+    if (app.M.wallFinish !== paintDefaults.wall) p.set('w', app.M.wallFinish);
+    if (app.M.ceilingFinish !== paintDefaults.ceiling) p.set('c', app.M.ceilingFinish);
     history.replaceState(null, '', '#' + p.toString());
   }
 
@@ -141,6 +147,19 @@ export function initUI(app, opts = {}) {
     return el;
   };
 
+  /** 一排色块：点一下就换颜色 */
+  const swatches = (options, get, set) => {
+    const btns = Object.entries(options).map(([k, o]) =>
+      h('button', { class: 'swatch', 'data-k': k, title: o.brand ? `${o.brand} ${o.code} ${o.name}（${o.color}）` : o.label, onclick: () => { set(k); editor.save(); app.invalidate(); app.emit('state'); } },
+        h('i', { style: `background:${o.color}` }),
+        h('span', {}, o.name || o.label, o.code ? h('small', {}, o.code) : null)));
+    const el = h('div', { class: 'swatches' }, btns);
+    el.sync = () => { for (const b of btns) b.classList.toggle('on', b.dataset.k === get()); };
+    return el;
+  };
+  refs.wallSwatches = swatches(app.M.wallOptions(), () => app.M.wallFinish, (k) => app.M.setWall(k));
+  refs.ceilingSwatches = swatches(app.M.ceilingOptions(), () => app.M.ceilingFinish, (k) => app.M.setCeiling(k));
+
   refs.addSelect = h('select', {}, Object.entries(COMPONENTS).map(([k, v]) => h('option', { value: k }, `${v.cat} · ${v.label}`)));
   refs.dirty = h('p', { class: 'hint dirty' });
   const fileInput = h('input', { type: 'file', accept: '.json,application/json', hidden: true, onchange: async (e) => {
@@ -180,9 +199,19 @@ export function initUI(app, opts = {}) {
           ro ? h('span', {}, `${app.state.masterBeam}°（已定）`) : h('div', { class: 'segs' }, refs.beamButtons)),
         slider('曝光', -2, 2, 0.1, 0, (v) => (v > 0 ? '+' : '') + v.toFixed(1), (v) => app.setExposure(v)),
         slider('剖切高度', 0.3, 3, 0.05, 3, (v) => (v >= 2.95 ? '不切' : v.toFixed(2) + ' m'), (v) => app.setClip(v))),
-      ro ? null : section('材质', false,
-        h('div', { class: 'field' }, h('span', {}, '地板'), select(FLOOR_FINISHES, app.M.floorFinish, (v) => { app.M.setFloor(v); editor.save(); app.invalidate(); })),
-        h('div', { class: 'field' }, h('span', {}, '墙面'), select(WALL_FINISHES, app.M.wallFinish, (v) => { app.M.setWall(v); editor.save(); app.invalidate(); }))),
+      ro
+        ? section('材质和墙漆（已定）', false,
+          h('div', { class: 'kv' }, h('span', {}, '墙面'), h('b', {}, app.M.wallOptions()[app.M.wallFinish].label)),
+          h('div', { class: 'kv' }, h('span', {}, '天花和边吊'), h('b', {}, app.M.ceilingOptions()[app.M.ceilingFinish].label)),
+          h('div', { class: 'kv' }, h('span', {}, '地板'), h('b', {}, FLOOR_FINISHES[app.M.floorFinish].label)),
+          h('p', { class: 'hint' }, '屏幕上的颜色只能参考，以立邦色卡实物为准。'))
+        : section('材质和墙漆', false,
+          h('p', { class: 'sub' }, '墙面'),
+          refs.wallSwatches,
+          h('p', { class: 'sub' }, '天花和边吊'),
+          refs.ceilingSwatches,
+          h('div', { class: 'field' }, h('span', {}, '地板'), select(FLOOR_FINISHES, app.M.floorFinish, (v) => { app.M.setFloor(v); editor.save(); app.invalidate(); })),
+          h('p', { class: 'hint' }, '带色号的是立邦官网的色值。屏幕和灯光都会让颜色偏，「白天」场景最接近色卡；最后以色卡实物为准。')),
       ro ? null : section('家具和组件', false,
         h('p', { class: 'hint' }, '点场景里的家具：换款式、面料、尺寸、位置；选中后按住可以拖动。'),
         h('div', { class: 'row' }, refs.addSelect, h('button', { class: 'btn', onclick: () => { editor.add(refs.addSelect.value); toast('已添加，拖动它到位置上'); } }, '添加')),
@@ -388,7 +417,9 @@ export function initUI(app, opts = {}) {
           li('做法', `${payload.o} · ${opt.name}`),
           li('射灯', spots),
           li('主卧射灯', `光束角 ${payload.mb}°`),
-          li('材质', `${FLOOR_FINISHES[payload.fl].label}地板 · ${WALL_FINISHES[payload.wl].label}墙面`),
+          li('墙面', app.M.wallOptions()[payload.wl].label),
+          li('天花和边吊', app.M.ceilingOptions()[payload.cl].label),
+          li('地板', FLOOR_FINISHES[payload.fl].label),
           li('家具', furnitureChanges ? `仓库里的布置 + 你在这台电脑上改的 ${furnitureChanges} 处` : '仓库里的布置'),
           li('打开时', `${data.scenes[payload.s].name} · ${(data.cameras.find((c) => c.id === payload.vw) || {}).name || '鸟瞰全屋'}`)),
         field,
@@ -425,6 +456,8 @@ export function initUI(app, opts = {}) {
     for (const b of refs.viewButtons) b.classList.toggle('on', b.dataset.k === s.view);
     for (const b of refs.beamButtons) b.classList.toggle('on', Number(b.dataset.k) === s.masterBeam);
     for (const t of refs.toggles) t.sync();
+    refs.wallSwatches.sync();
+    refs.ceilingSwatches.sync();
     const controls = ro ? [] : [
       // 每个做法各自一个开关：关掉 = 这个做法不装客厅射灯。主卧射灯不受影响
       opt.spotZ != null

@@ -50,9 +50,11 @@ export class App extends EventTarget {
     this.clipPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 3);
 
     this.M = new Materials();
+    this.M.registerPaints(data.paints);
     if (data.finishes) {
       this.M.setFloor(data.finishes.floor);
       this.M.setWall(data.finishes.wall);
+      this.M.setCeiling(data.finishes.ceiling || 'white');
     }
     this.lighting = new Lighting(this.scene, renderer, data, this.M);
     this.controls = new ViewControls(this.camera, canvas, () => this.invalidate());

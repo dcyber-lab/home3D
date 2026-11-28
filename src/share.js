@@ -118,6 +118,7 @@ export function buildShare(app) {
     vw: s.view || 'overview',
     fl: app.M.floorFinish,
     wl: app.M.wallFinish,
+    cl: app.M.ceilingFinish,
     sh: SHOW_KEYS.map((k) => (s.show[k] ? 1 : 0)).join(''),
     g: s.general ? 1 : 0,
   };
@@ -141,7 +142,7 @@ export function applyShare(base, p) {
   if (Number(p.a) >= 8 && Number(p.a) <= 90) sp.beam = Number(p.a);
   if (Number(p.mb) >= 8 && Number(p.mb) <= 90) d.ceiling.master.beam = Number(p.mb);
   if (d.scenes[p.s]) d.lights.defaultScene = p.s;
-  d.finishes = { floor: p.fl, wall: p.wl };
+  d.finishes = { floor: p.fl, wall: p.wl, ceiling: p.cl || 'white' };
   d.furniture = patchFurniture(d.furniture, p.fu);
   const show = {};
   SHOW_KEYS.forEach((k, i) => { if (typeof p.sh === 'string' && p.sh[i] != null) show[k] = p.sh[i] === '1'; });

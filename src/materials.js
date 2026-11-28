@@ -30,7 +30,10 @@ export const FLOOR_FINISHES = {
   walnut:     { label: '胡桃木', color: '#7a573d' },
 };
 
-/** 墙面可选 */
+/** 天花、边吊默认的白 */
+export const CEILING_WHITE = '#f4f2ed';
+
+/** 墙面可选（通用色；带色号的墙漆在 data/home.json 的 paints 里） */
 export const WALL_FINISHES = {
   warm_white: { label: '暖白', color: '#efe9df' },
   cream:      { label: '奶油', color: '#e9dfcc' },
@@ -190,6 +193,8 @@ export class Materials {
     this.tex = {};
     this.floorFinish = 'oak_light';
     this.wallFinish = 'warm_white';
+    this.ceilingFinish = 'white';
+    this.paints = {};               // 墙漆色卡（data/home.json 里的 paints）
     this.colourCode = false;
   }
 
@@ -216,7 +221,7 @@ export class Materials {
     if (this.cache.has(name)) return this.cache.get(name);
     let m;
     switch (name) {
-      case 'wall':        m = this.std({ color: WALL_FINISHES[this.wallFinish].color, roughness: 0.94 }); break;
+      case 'wall':        m = this.std({ color: this.wallOptions()[this.wallFinish].color, roughness: 0.94 }); break;
       case 'wall_cap':    m = this.std({ color: '#44464b', roughness: 1 }); break;
       case 'ceiling':     m = this.std({ color: '#f4f2ed', roughness: 0.96 }); break;
       case 'bulk_new':    m = this.std({ color: '#f4f2ed', roughness: 0.96 }); break;
@@ -293,16 +298,49 @@ export class Materials {
     this.get('floor_wood').color.set(FLOOR_FINISHES[key].color);
   }
 
+  /** 登记墙漆色卡。每一项：{ id, brand, code, name, hex } */
+  registerPaints(list) {
+    for (const p of list || []) {
+      if (!p || !p.id || !/^#[0-9a-fA-F]{6}$/.test(p.hex || '')) continue;
+      this.paints[p.id] = { label: `${p.name} · ${p.code}`, color: p.hex, name: p.name, code: p.code, brand: p.brand, source: p.source, paint: true };
+    }
+  }
+
+  /** 墙面能选的颜色：色卡在前，后面是几种通用色 */
+  wallOptions() {
+    return { ...this.paints, ...WALL_FINISHES };
+  }
+
+  /** 天花和边吊能选的颜色：默认白，或者色卡里的任意一个 */
+  ceilingOptions() {
+    return { white: { label: '白色', color: CEILING_WHITE }, ...this.paints };
+  }
+
   setWall(key) {
-    if (!WALL_FINISHES[key]) return;
+    const f = this.wallOptions()[key];
+    if (!f) return;
     this.wallFinish = key;
-    this.get('wall').color.set(WALL_FINISHES[key].color);
+    this.get('wall').color.set(f.color);
   }
 
   /** 新旧分色：旧边吊灰蓝、新做的暖黄，给施工队看哪块是新做的 */
+  /** 天花楼板和边吊刷同一种颜色 */
+  setCeiling(key) {
+    if (!this.ceilingOptions()[key]) return;
+    this.ceilingFinish = key;
+    this.applyCeiling();
+  }
+
+  applyCeiling() {
+    const c = this.ceilingOptions()[this.ceilingFinish].color;
+    this.get('ceiling').color.set(c);
+    // 开着「新旧分色」时边吊用区分色，关掉后回到天花的颜色
+    this.get('bulk_old').color.set(this.colourCode ? '#8fa0b3' : c);
+    this.get('bulk_new').color.set(this.colourCode ? '#ecd9a6' : c);
+  }
+
   setColourCode(on) {
     this.colourCode = on;
-    this.get('bulk_old').color.set(on ? '#8fa0b3' : '#f4f2ed');
-    this.get('bulk_new').color.set(on ? '#ecd9a6' : '#f4f2ed');
+    this.applyCeiling();
   }
 }

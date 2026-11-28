@@ -280,9 +280,18 @@
     { "id": "mbath_screen", "type": "glass_panel", "name": "淋浴隔断",  "room": "mbath", "x": [7.84, 7.86], "y": [3.20, 5.22], "h": 2.00, "face": "-x", "finish": "glass" }
   ],
 
+  "paints": [
+    { "id": "np_ow_1006p", "brand": "立邦 Nippon Paint", "code": "NP OW 1006P", "name": "Soft Flutter", "hex": "#EFE7DA",
+      "source": "https://nipponpaint.com.sg/colours/find-your-colour/np-ow-1006-p/soft-flutter/", "checked": "2026-11-28" },
+    { "id": "np_n_3208p", "brand": "立邦 Nippon Paint", "code": "NP N 3208P", "name": "Bonito Flakes", "hex": "#EDE9DC",
+      "source": "https://nipponpaint.com.sg/colours/find-your-colour/np-n-3208-p/bonito-flakes/", "checked": "2026-11-28" }
+  ],
+  "paintsNote": "墙漆色卡。hex 取自立邦新加坡官网 Find Your Colour 页面上色块的颜色，不是从截图取色。要加色号就在 paints 里加一行，页面的「材质和墙漆」里会多一个色块。",
+
   "finishes": {
     "floor": "oak_light",
-    "wall": "warm_white"
+    "wall": "warm_white",
+    "ceiling": "white"
   },
 
   "toConfirm": [
