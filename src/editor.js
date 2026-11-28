@@ -13,8 +13,31 @@ export function loadEdits(base) {
     if (raw) {
       const saved = JSON.parse(raw);
       if (saved && saved.meta && saved.meta.version === base.meta.version && Array.isArray(saved.furniture)) {
-        saved.meta.localEdits = true;
-        return saved;
+        // 自己导入的整份数据：原样用
+        if (saved.meta.imported) {
+          saved.meta.localEdits = true;
+          return saved;
+        }
+        // 平时在页面上的改动：只把家具、材质和选好的方案盖到仓库数据上。
+        // 墙体、吊顶这些尺寸永远用仓库里最新的，仓库更新了不会被本机的旧副本挡住。
+        const d = JSON.parse(JSON.stringify(base));
+        d.furniture = saved.furniture;
+        if (saved.finishes) d.finishes = saved.finishes;
+        const sl = saved.ceiling && saved.ceiling.living, dl = d.ceiling.living;
+        if (sl) {
+          if (dl.options[sl.default]) dl.default = sl.default;
+          for (const [k, o] of Object.entries(dl.options)) {
+            if (sl.options && sl.options[k] && sl.options[k].noSpots) o.noSpots = true;
+            else delete o.noSpots;
+          }
+          const ss = sl.common && sl.common.spots;
+          if (ss && Array.isArray(ss.y) && ss.y.length) dl.common.spots.y = ss.y;
+          if (ss && Number.isFinite(ss.beam)) dl.common.spots.beam = ss.beam;
+        }
+        if (saved.ceiling && saved.ceiling.master && Number.isFinite(saved.ceiling.master.beam)) d.ceiling.master.beam = saved.ceiling.master.beam;
+        if (saved.lights && d.scenes[saved.lights.defaultScene]) d.lights.defaultScene = saved.lights.defaultScene;
+        d.meta.localEdits = true;
+        return d;
       }
     }
   } catch (e) {
@@ -375,6 +398,7 @@ export class Editor extends EventTarget {
     if (!d || !Array.isArray(d.walls) || !Array.isArray(d.furniture) || !d.ceiling) throw new Error('这不是全屋模型的 home.json');
     d.meta = d.meta || {};
     d.meta.version = this.app.baseData.meta.version;
+    d.meta.imported = true;          // 整份导入的数据原样用，不跟仓库数据合并
     localStorage.setItem(STORE_KEY, JSON.stringify(d));
     location.reload();
   }

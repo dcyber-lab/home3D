@@ -44,8 +44,20 @@ function wrap(w, h, body, title) {
 
 /** 一个做法在沙发墙这一条的剖面零件（单位 m）。noSpots = 这个做法移除了客厅射灯 */
 export function sectionParts(data, key, noSpots = false) {
-  const Lc = data.ceiling.living, c = Lc.common, opt = Lc.options[key];
-  const H = data.heights.ceiling, old = data.ceiling.oldBox;
+  const Lc = data.ceiling.living;
+  return sectionOf({ opt: Lc.options[key], c: Lc.common, H: data.heights.ceiling, old: data.ceiling.oldBox, fromWall: Lc.common.spots.fromWall, noSpots });
+}
+
+/** 主卧床头墙这一条的剖面。有旧边吊时就是客厅做法 B 的样子：旧的保留 + 外面加一层 150 */
+export function masterSectionParts(data) {
+  const m = data.ceiling.master;
+  const opt = { kind: 'u', sofaWidth: m.headBand, under: m.under, keepOldBox: !!m.oldBox, spotZ: m.under };
+  const old = m.oldBox ? { x: m.oldBox.u, z: m.oldBox.z } : data.ceiling.oldBox;
+  return sectionOf({ opt, c: data.ceiling.living.common, H: data.heights.ceiling, old, fromWall: m.spots[0].u, noSpots: false });
+}
+
+/** opt = 这一条边吊的做法参数，c = 灯槽的公共参数，old = 旧边吊 { x, z } */
+function sectionOf({ opt, c, H, old, fromWall, noSpots }) {
   const parts = [];           // { x0, x1, z0, z1, kind: 'new' | 'old' | 'alu' }
   const leds = [];            // { x, z, dir: 'up' | 'wash' }
   const R = (x0, x1, z0, z1, kind) => parts.push({ x0, x1, z0, z1, kind });
@@ -68,7 +80,7 @@ export function sectionParts(data, key, noSpots = false) {
     leds.push({ x: b.x[1] + 0.015, z: ch.z[0] + 0.012, dir: 'up' });
   }
   if (opt.keepOldBox) R(old.x[0], old.x[1], old.z[0], old.z[1], 'old');
-  const spot = opt.spotZ != null && !noSpots ? { x: c.spots.fromWall, z: opt.spotZ } : null;
+  const spot = opt.spotZ != null && !noSpots ? { x: fromWall, z: opt.spotZ } : null;
   const lowest = Math.min(...parts.map((p) => p.z0));
   const widest = Math.max(...parts.filter((p) => p.kind !== 'alu').map((p) => p.x1));
   return { parts, leds, spot, opt, H, lowest, widest, old };
@@ -77,9 +89,11 @@ export function sectionParts(data, key, noSpots = false) {
 const SECTION_BOTTOM = 2.04;   // 剖面图里墙画到离地多高为止
 
 function sectionBody(data, key, S, ox, oy, compact, noSpots = false) {
-  const sec = sectionParts(data, key, noSpots);
-  const { opt, H } = sec;
-  const old = data.ceiling.oldBox;
+  return sectionDraw(sectionParts(data, key, noSpots), S, ox, oy, compact, '沙发墙');
+}
+
+function sectionDraw(sec, S, ox, oy, compact, wallLabel) {
+  const { opt, H, old } = sec;
   const X = (x) => ox + (x * 100 + 12) * S;
   const Y = (z) => oy + (272 - z * 100) * S;
   const fs = compact ? 10 : 11.5;
@@ -88,7 +102,7 @@ function sectionBody(data, key, S, ox, oy, compact, noSpots = false) {
   s += `<rect x="${X(-0.10)}" y="${Y(2.68)}" width="${10 * S}" height="${(268 - SECTION_BOTTOM * 100) * S}" fill="${C.wall}"/>`;
   s += `<rect x="${X(-0.10)}" y="${Y(2.68)}" width="${72 * S}" height="${8 * S}" fill="${C.wall}"/>`;
   s += text(X(0.26), Y(2.64) + 4, '原天花（楼板）', { size: compact ? 10 : 12, fill: '#fff', anchor: 'middle' });
-  s += text(X(-0.05) + 4, Y(SECTION_BOTTOM + 0.1), '沙发墙', { size: compact ? 10 : 12, fill: '#fff', anchor: 'middle', rotate: -90 });
+  s += text(X(-0.05) + 4, Y(SECTION_BOTTOM + 0.1), wallLabel, { size: compact ? 10 : 12, fill: '#fff', anchor: 'middle', rotate: -90 });
   // 零件
   const fill = { new: C.neu, old: C.old, alu: C.alu };
   for (const p of sec.parts) {
@@ -296,16 +310,19 @@ export function masterPlanSVG(data, beam) {
   const S = 128, ox = 150, oy = 150;
   // 画成跟平面图同向：床头墙在右，窗墙在上
   const X = (u) => ox + (U - u) * S, Y = (v) => oy + v * S;
-  const w = ox + U * S + 320, h = oy + VV * S + 70;
+  const ob = m.oldBox;
+  const w = ox + U * S + 320 + 480, h = oy + VV * S + 70;
   const mid = c.lipThickness + c.ledFromLip;
   const cc = [m.headBand + R, m.windowBand + R];
   const path = (o) => [[U, m.windowBand - o], ...arc(cc, R + o, -Math.PI / 2, -Math.PI, 14), [m.headBand - o, VV]];
-  let s = text(28, 36, '主卧天花布置 · L 形边吊', { size: 19, weight: 700 });
+  let s = text(28, 36, `主卧天花布置 · L 形边吊${ob ? '（床头墙按客厅做法 B：旧边吊保留 + 外面加一层 150）' : ''}`, { size: 19, weight: 700 });
   s += text(28, 58, '从上往下看，方向跟平面图一致：上边是窗墙，右边是床头墙。单位 m。', { size: 12, fill: C.sub });
   s += `<rect x="${X(U)}" y="${Y(0)}" width="${U * S}" height="${VV * S}" fill="#fafafa" stroke="${C.line}" stroke-width="2.5"/>`;
   s += `<polygon points="${pts([...path(0), [0, VV], [0, 0], [U, 0]], X, Y)}" fill="${C.neu}" stroke="${C.line}"/>`;
   s += `<polyline points="${pts(path(c.trough), X, Y)}" fill="none" stroke="${C.sub}" stroke-dasharray="4 3"/>`;
   s += `<polyline points="${pts(path(mid), X, Y)}" fill="none" stroke="${C.led}" stroke-width="2.5"/>`;
+  // 床头墙的旧边吊（保留）
+  if (ob) s += `<rect x="${X(ob.u[1])}" y="${Y(0)}" width="${(ob.u[1] - ob.u[0]) * S}" height="${VV * S}" fill="${C.old}" stroke="${C.line}"/>`;
   const bed = data.furniture.find((f) => f.id === 'master_bed');
   if (bed) {
     const u0 = m.headWallX - bed.x[1], u1 = m.headWallX - bed.x[0], v0 = bed.y[0] - m.windowWallY, v1 = bed.y[1] - m.windowWallY;
@@ -331,8 +348,9 @@ export function masterPlanSVG(data, beam) {
   s += dimH(X(m.spots[0].u), X(0), Y(m.spots[0].v) - 20, '');
   s += text(X(m.spots[0].u) - 8, Y(m.spots[0].v) - 16, `离墙 ${m.spots[0].u.toFixed(2)}`, { size: 11, fill: C.dim, anchor: 'end' });
   const hs = m.hatch.size;
-  s += `<rect x="${X(0.01 + hs[0])}" y="${Y(m.hatch.v - hs[1] / 2)}" width="${hs[0] * S}" height="${hs[1] * S}" fill="none" stroke="${C.dim}" stroke-dasharray="4 3"/>`;
-  s += text(X(0.01 + hs[0]) - 6, Y(m.hatch.v) + 4, `检修口 ${m.hatch.id}`, { size: 11, fill: C.dim, anchor: 'end' });
+  const hu0 = ob ? ob.u[1] + 0.01 : 0.01;      // 检修口让开旧边吊
+  s += `<rect x="${X(hu0 + hs[0])}" y="${Y(m.hatch.v - hs[1] / 2)}" width="${hs[0] * S}" height="${hs[1] * S}" fill="none" stroke="${C.dim}" stroke-dasharray="4 3"/>`;
+  s += text(X(hu0 + hs[0]) - 6, Y(m.hatch.v) + 4, `检修口 ${m.hatch.id}`, { size: 11, fill: C.dim, anchor: 'end' });
   s += dimH(X(m.headBand), X(0), Y(3.0), m.headBand.toFixed(2), { below: true });
   s += dimV(X(1.9), Y(0), Y(m.windowBand), m.windowBand.toFixed(2), { left: true });
   s += text(X(m.headBand + R * 0.6), Y(m.windowBand + R * 0.55), `R${R.toFixed(2)}`, { size: 11, fill: C.dim, anchor: 'end' });
@@ -344,7 +362,18 @@ export function masterPlanSVG(data, beam) {
   s += text(X(U / 2), Y(VV) + 30, '↓ 衣柜 / 主卫门', { size: 12.5, anchor: 'middle', weight: 700 });
   s += text(X(0) + 120, Y(VV) - 64, `边吊底离地 ${m.under.toFixed(2)}`, { size: 11.5, fill: C.sub });
   s += text(X(0) + 120, Y(VV) - 44, `射灯光束角 ${beam}°（24° / 36° 待定）`, { size: 11.5, fill: C.sub });
-  s += legend(X(0) + 120, Y(VV) - 28, [[C.neu, '新做的边吊'], [C.led, '灯带']]);
+  s += legend(X(0) + 120, Y(VV) - 28, ob ? [[C.neu, '新做的边吊'], [C.old, '旧边吊（保留）'], [C.led, '灯带']] : [[C.neu, '新做的边吊'], [C.led, '灯带']]);
+  // 右边附一张床头墙这一条的剖面
+  const ix = X(0) + 330, iy = 96;
+  s += text(ix + 8, iy + 14, '床头墙这一条的剖面（从窗墙往衣柜方向看）', { size: 13, weight: 700 });
+  s += sectionDraw(masterSectionParts(data), 4.2, ix, iy + 26, true, '床头墙');
+  const notes = ob ? [
+    `旧边吊保留：宽 ${cm(ob.u[1])}、高 ${cm(ob.z[1] - ob.z[0])}，底离地 ${ob.z[0].toFixed(2)}（尺寸照客厅的取，待现场量）`,
+    `外面新做一层：做到离墙 ${cm(m.headBand)}，底离地 ${m.under.toFixed(2)}`,
+    `射灯 ${m.spots.map((sp) => sp.id).join('、')} 装在新做的那层底面，离墙 ${cm(m.spots[0].u)}`,
+    '窗墙那一条按一层 150 做（有没有旧边吊待确认）',
+  ] : [`一层 150：做到离墙 ${cm(m.headBand)}，底离地 ${m.under.toFixed(2)}`, `射灯离墙 ${cm(m.spots[0].u)}`];
+  notes.forEach((t, i) => { s += text(ix + 8, iy + 26 + (272 - SECTION_BOTTOM * 100) * 4.2 + 34 + i * 20, `· ${t}`, { size: 11.5, fill: C.sub }); });
   return wrap(w, h, s, '主卧天花布置');
 }
 

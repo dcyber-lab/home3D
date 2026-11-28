@@ -353,9 +353,18 @@ export function buildMasterCeiling(data, M, beam) {
     });
     spotsAt.push([x, y, m.under, s.id]);
   }
+  // 床头墙这一条跟客厅做法 B 一样：旧边吊保留，露在新做的 150 下面
+  const ob = m.oldBox;
+  if (ob) {
+    const [ox0, oy0] = map([ob.u[1], 0]);
+    const [ox1, oy1] = map([ob.u[0], VV]);
+    g.add(box(ox0, ox1, oy0, oy1, ob.z[0], ob.z[1], M.get('bulk_old')));
+  }
+  // 检修口开在新做的那层底面上，让开旧边吊
   const hs = m.hatch.size;
-  const [hx0, hy0] = map([0.01 + hs[0], m.hatch.v - hs[1] / 2]);
-  const [hx1, hy1] = map([0.01, m.hatch.v + hs[1] / 2]);
+  const hu0 = ob ? ob.u[1] + 0.01 : 0.01;
+  const [hx0, hy0] = map([hu0 + hs[0], m.hatch.v - hs[1] / 2]);
+  const [hx1, hy1] = map([hu0, m.hatch.v + hs[1] / 2]);
   g.add(box(hx0, hx1, hy0, hy1, m.under - 0.003, m.under, M.get('hatch'), { cast: false }));
-  return { group: g, lights, info: { spots: spotsAt, under: m.under, beam } };
+  return { group: g, lights, info: { spots: spotsAt, under: m.under, beam, oldBox: !!ob, hatchU: [hu0, hu0 + hs[0]] } };
 }

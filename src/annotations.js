@@ -125,7 +125,14 @@ export class Annotations {
       this.dim([hx - s.u, wy + prev, m.under - 0.004], [hx - s.u, wy + s.v, m.under - 0.004], `${s.id} ${fmt(s.v - prev)}`);
       prev = s.v;
     }
-    this.dim([hx - 0.02, wy + m.size.v - 0.02, 0], [hx - 0.02, wy + m.size.v - 0.02, m.under], `边吊底 ${fmt(m.under)}`);
+    if (m.oldBox) {
+      const ob = m.oldBox;
+      this.dim([hx - 0.02, wy + m.size.v - 0.02, 0], [hx - 0.02, wy + m.size.v - 0.02, ob.z[0]], `旧边吊底 ${fmt(ob.z[0])}`);
+      this.dim([hx - m.headBand + 0.05, wy + m.size.v - 0.02, 0], [hx - m.headBand + 0.05, wy + m.size.v - 0.02, m.under], `边吊底 ${fmt(m.under)}`);
+      this.dim([hx - ob.u[1], wy + 2.2, ob.z[0] - 0.004], [hx, wy + 2.2, ob.z[0] - 0.004], `旧 ${fmt(ob.u[1])}`);
+    } else {
+      this.dim([hx - 0.02, wy + m.size.v - 0.02, 0], [hx - 0.02, wy + m.size.v - 0.02, m.under], `边吊底 ${fmt(m.under)}`);
+    }
 
     this.sync();
   }
