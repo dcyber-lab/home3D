@@ -95,7 +95,7 @@ export class Editor extends EventTarget {
     window.addEventListener('pointerdown', (e) => {
       if (e.target !== canvas || e.button !== 0) return;
       down = { x: e.clientX, y: e.clientY, t: performance.now() };
-      if (this.tool === 'select' && this.selected) {
+      if (this.tool === 'select' && this.selected && !this.readOnly) {
         const hit = this.pickItem(e);
         if (hit && hit.item === this.selected) this._startDrag(e, hit);
       }
@@ -125,7 +125,7 @@ export class Editor extends EventTarget {
         if (this.tool === 'measure') this.setTool('select');
         else this.select(null);
       }
-      if ((e.key === 'Delete' || e.key === 'Backspace') && this.selected) { e.preventDefault(); this.remove(this.selected); }
+      if ((e.key === 'Delete' || e.key === 'Backspace') && this.selected && !this.readOnly) { e.preventDefault(); this.remove(this.selected); }
     });
   }
 
@@ -350,6 +350,7 @@ export class Editor extends EventTarget {
   }
 
   save() {
+    if (this.readOnly) return;       // 只读页面什么都不存
     this.app.data.meta.localEdits = true;
     try {
       const d = this.snapshotData();
