@@ -3,6 +3,18 @@
 import * as THREE from 'three';
 import { COMPONENTS, newItem } from './furniture.js';
 import { FACES, round2, toPlan } from './geo.js';
+import { diffFurniture, patchFurniture } from './share.js';
+
+// 页面上能改的家具字段
+const EDIT_KEYS = ['type', 'name', 'x', 'y', 'z0', 'h', 'face', 'finish', 'opts', 'hidden'];
+// 2026-11-28 主卧按业主给的位置改过默认摆放。在那之前存下的本机副本没有记“当时的默认值”，
+// 用这张表补上：本机没动过的这几件（还等于旧默认）跟着仓库走，动过的保留本机的。
+const LEGACY_FURNITURE = {
+  master_bed: { x: [6.79, 8.79], y: [-0.24, 1.56] },
+  master_nightstand: { x: [8.40, 8.79], y: [1.60, 2.14] },
+  master_desk: { x: [8.14, 8.79], y: [-1.32, -0.32] },
+  master_chair: { x: [7.74, 8.20], y: [-1.05, -0.59] },
+};
 
 const STORE_KEY = 'home3d.data.v1';
 
@@ -12,16 +24,21 @@ export function loadEdits(base) {
     const raw = localStorage.getItem(STORE_KEY);
     if (raw) {
       const saved = JSON.parse(raw);
-      if (saved && saved.meta && saved.meta.version === base.meta.version && Array.isArray(saved.furniture)) {
+      if (saved && saved.meta && Array.isArray(saved.furniture)) {
         // 自己导入的整份数据：原样用
         if (saved.meta.imported) {
           saved.meta.localEdits = true;
           return saved;
         }
-        // 平时在页面上的改动：只把家具、材质和选好的方案盖到仓库数据上。
-        // 墙体、吊顶这些尺寸永远用仓库里最新的，仓库更新了不会被本机的旧副本挡住。
+        // 平时在页面上的改动：只把“改了什么”套到仓库最新的数据上。
+        // 墙体、吊顶尺寸和没动过的家具永远跟仓库走；动过的家具、材质和选好的方案保留本机的。
         const d = JSON.parse(JSON.stringify(base));
-        d.furniture = saved.furniture;
+        let from = saved.meta.baseFurniture;       // 存的时候仓库里的家具（用来算本机到底改了什么）
+        if (!Array.isArray(from)) {
+          from = JSON.parse(JSON.stringify(base.furniture));
+          for (const f of from) if (LEGACY_FURNITURE[f.id]) Object.assign(f, LEGACY_FURNITURE[f.id]);
+        }
+        d.furniture = patchFurniture(d.furniture, diffFurniture(from, saved.furniture, EDIT_KEYS), EDIT_KEYS);
         if (saved.finishes) d.finishes = saved.finishes;
         const sl = saved.ceiling && saved.ceiling.living, dl = d.ceiling.living;
         if (sl) {
@@ -377,6 +394,8 @@ export class Editor extends EventTarget {
     this.app.data.meta.localEdits = true;
     try {
       const d = this.snapshotData();
+      // 记下这时仓库里的家具，以后仓库更新了，才能分清哪些是本机改的
+      if (!d.meta.imported) d.meta.baseFurniture = JSON.parse(JSON.stringify(this.app.baseData.furniture));
       localStorage.setItem(STORE_KEY, JSON.stringify(d));
     } catch (e) {
       console.warn('存不进本机', e);

@@ -53,7 +53,7 @@ export function decodeShare(token) {
 }
 
 /** 家具相对仓库里 data/home.json 的差异：改了哪些、加了哪些、删了哪些 */
-function diffFurniture(baseList, curList) {
+export function diffFurniture(baseList, curList, keys = ITEM_KEYS) {
   const baseById = new Map(baseList.map((f) => [f.id, f]));
   const curIds = new Set(curList.map((f) => f.id));
   const out = { set: {}, add: [], del: [] };
@@ -61,7 +61,7 @@ function diffFurniture(baseList, curList) {
     const b = baseById.get(cur.id);
     if (!b) { out.add.push(clone(cur)); continue; }
     const ch = {};
-    for (const k of ITEM_KEYS) if (!same(b[k], cur[k])) ch[k] = cur[k] === undefined ? null : cur[k];
+    for (const k of keys) if (!same(b[k], cur[k])) ch[k] = cur[k] === undefined ? null : cur[k];
     if (Object.keys(ch).length) out.set[cur.id] = ch;
   }
   for (const b of baseList) if (!curIds.has(b.id)) out.del.push(b.id);
@@ -69,7 +69,7 @@ function diffFurniture(baseList, curList) {
   return n ? out : null;
 }
 
-function patchFurniture(list, diff) {
+export function patchFurniture(list, diff, keys = ITEM_KEYS) {
   if (!diff) return list;
   const del = new Set(diff.del || []);
   const out = list.filter((f) => !del.has(f.id));
@@ -77,7 +77,7 @@ function patchFurniture(list, diff) {
     const ch = (diff.set || {})[f.id];
     if (!ch) continue;
     for (const [k, v] of Object.entries(ch)) {
-      if (!ITEM_KEYS.includes(k)) continue;
+      if (!keys.includes(k)) continue;
       if (v === null) delete f[k];
       else f[k] = v;
     }

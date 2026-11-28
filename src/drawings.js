@@ -327,7 +327,8 @@ export function masterPlanSVG(data, beam) {
   if (bed) {
     const u0 = m.headWallX - bed.x[1], u1 = m.headWallX - bed.x[0], v0 = bed.y[0] - m.windowWallY, v1 = bed.y[1] - m.windowWallY;
     s += `<rect x="${X(u1)}" y="${Y(v0)}" width="${(u1 - u0) * S}" height="${(v1 - v0) * S}" fill="none" stroke="${C.sub}" stroke-dasharray="6 4"/>`;
-    s += text(X((u0 + u1) / 2), Y((v0 + v1) / 2) + 4, '床', { size: 12, fill: C.sub, anchor: 'middle' });
+    s += text(X((u0 + u1) / 2), Y((v0 + v1) / 2) + 4, `床 ${(v1 - v0).toFixed(2)} 宽`, { size: 12, fill: C.sub, anchor: 'middle' });
+    s += text(X((u0 + u1) / 2), Y((v0 + v1) / 2) + 22, `离衣柜 ${(VV - v1).toFixed(2)} · 离窗墙 ${v0.toFixed(2)}`, { size: 10.5, fill: C.sub, anchor: 'middle' });
   }
   const fan = data.furniture.find((f) => f.type === 'fan' && f.room === 'master');
   if (fan) {
